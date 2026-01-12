@@ -1,0 +1,375 @@
+openapi: 3.0.3
+info:
+  title: Catalog Management API
+  description: API for managing data product catalogs in the Trusted Data Space.
+  version: 1.0.0
+servers:
+  - url: /catalog/v1
+tags:
+  - name: Catalog
+    description: Catalog management operations
+  - name: Application
+    description: Usage application operations
+
+paths:
+  /catalogs:
+    post:
+      tags:
+        - Catalog
+      summary: Register a new catalog item
+      operationId: registerCatalogItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogItemRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItem'
+    get:
+      tags:
+        - Catalog
+      summary: Search catalogs
+      operationId: searchCatalogs
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: topicCategory
+          in: query
+          schema:
+            $ref: '#/components/schemas/TopicCategory'
+        - name: industryCategory
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, ACTIVE, CANCELLED]
+        - name: spaceId
+          in: query
+          schema:
+            type: string
+          description: Context of the current space to filter restricted products.
+      responses:
+        '200':
+          description: List of catalogs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogItem'
+
+  /catalogs/{id}:
+    get:
+      tags:
+        - Catalog
+      summary: Get catalog item details
+      operationId: getCatalogItem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Catalog item details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItem'
+        '404':
+          description: Not found
+    put:
+      tags:
+        - Catalog
+      summary: Update catalog item
+      operationId: updateCatalogItem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogItemRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItem'
+    delete:
+      tags:
+        - Catalog
+      summary: Cancel catalog item
+      operationId: cancelCatalogItem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Cancelled
+
+  /catalogs/{id}/apply:
+    post:
+      tags:
+        - Application
+      summary: Submit a usage application for a product
+      operationId: submitApplication
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsageRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageApplication'
+
+  /applications:
+    get:
+      tags:
+        - Application
+      summary: List usage applications
+      operationId: listApplications
+      parameters:
+        - name: providerId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UsageApplication'
+
+  /catalogs/{id}/audit:
+    post:
+      tags:
+        - Catalog
+      summary: Audit a catalog registration
+      operationId: auditCatalogItem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                approved:
+                  type: boolean
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: Audited
+
+  /applications/{id}/audit:
+    post:
+      tags:
+        - Application
+      summary: Audit a usage application
+      operationId: auditApplication
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                approved:
+                  type: boolean
+      responses:
+        '200':
+          description: Audited
+
+components:
+  schemas:
+    CatalogItemRequest:
+      type: object
+      required:
+        - name
+        - description
+        - topicCategory
+        - industryCategory
+        - organizationCategory
+        - applicationCategory
+        - sourceType
+        - deliveryMode
+        - updateFrequency
+        - qualityLevel
+        - securityLevel
+        - serviceType
+        - providerId
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        usagePolicy:
+          type: string
+          description: Usage strategy labels or policy descriptions
+        topicCategory:
+          $ref: '#/components/schemas/TopicCategory'
+        industryCategory:
+          type: string
+          description: GB/T 4754-2017 Industry Code
+        organizationCategory:
+          type: string
+        applicationCategory:
+          $ref: '#/components/schemas/ApplicationCategory'
+        sourceType:
+          $ref: '#/components/schemas/SourceType'
+        deliveryMode:
+          $ref: '#/components/schemas/DeliveryMode'
+        updateFrequency:
+          $ref: '#/components/schemas/UpdateFrequency'
+        qualityLevel:
+          $ref: '#/components/schemas/QualityLevel'
+        securityLevel:
+          $ref: '#/components/schemas/SecurityLevel'
+        serviceType:
+          $ref: '#/components/schemas/ServiceType'
+        providerId:
+          type: string
+        targetSpaceId:
+          type: string
+          description: Optional. If set, this product is visible only within the specified space.
+    CatalogItem:
+      allOf:
+        - $ref: '#/components/schemas/CatalogItemRequest'
+        - type: object
+          properties:
+            id:
+              type: string
+            version:
+              type: string
+            status:
+              type: string
+              enum: [PENDING, ACTIVE, CANCELLED]
+            createTime:
+              type: string
+              format: date-time
+            updateTime:
+              type: string
+              format: date-time
+
+    UsageRequest:
+      type: object
+      required:
+        - applicantId
+        - reason
+      properties:
+        applicantId:
+          type: string
+        reason:
+          type: string
+        expectedDuration:
+          type: string
+
+    UsageApplication:
+      type: object
+      properties:
+        id:
+          type: string
+        catalogId:
+          type: string
+        catalogName:
+          type: string
+        applicantId:
+          type: string
+        providerId:
+          type: string
+        reason:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED]
+        submitTime:
+          type: string
+          format: date-time
+
+    TopicCategory:
+      type: string
+      enum:
+        - A0000 # Basic Resources
+        - B0000 # Industry Resources
+        - C0000 # Social Livelihood
+        - D0000 # Government Services
+
+    ApplicationCategory:
+      type: string
+      enum:
+        - S0000 # Government Governance
+        - T0000 # Livelihood Service
+        - U0000 # Industrial Development
+        - V0000 # Security Emergency
+
+    SourceType:
+      type: string
+      enum: ['001', '002', '003', '004']
+
+    DeliveryMode:
+      type: string
+      enum: ['001', '002', '003', '004', '005', '006']
+
+    UpdateFrequency:
+      type: string
+      enum: ['001', '002', '003', '004', '005', '006', '007', '008', '009']
+
+    QualityLevel:
+      type: string
+      enum: ['001', '002', '003', '004']
+
+    SecurityLevel:
+      type: string
+      enum: ['001', '002', '003', '004', '005']
+
+    ServiceType:
+      type: string
+      enum: ['001', '002', '003', '004', '005']

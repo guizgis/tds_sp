@@ -1,0 +1,25 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: space-service
+  datasource:
+    url: jdbc:postgresql://192.170.12.201:5432/tds?connectTimeout=10&socketTimeout=30&sslmode=disable
+    username: tds_admin
+    password: "NuAQPtc2WuM#6Cbc"
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+logging:
+  file:
+    name: logs/space-service.log

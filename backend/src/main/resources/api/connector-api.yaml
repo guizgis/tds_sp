@@ -1,0 +1,364 @@
+openapi: 3.0.3
+info:
+  title: TDS-SP Connector Management API
+  description: |
+    连接器管理接口，严格遵循 NDI-TR-2025-03《数据基础设施 用户身份管理和接入要求》标准。
+    涵盖连接器注册、认证、注销及信息同步。
+  version: 1.0.0
+
+servers:
+  - url: /api/v1/connector
+    description: Connector Service Base URL
+
+paths:
+  /connectors:
+    post:
+      tags:
+        - Lifecycle
+      summary: 接入连接器注册
+      description: 用户提交连接器注册申请，获取身份标识。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorRegisterRequest'
+      responses:
+        '200':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorRegisterResponse'
+
+  /connectors/auth:
+    post:
+      tags:
+        - Authentication
+      summary: 接入连接器双向认证
+      description: 连接器向节点发起身份验证，并接收反向验证请求。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorAuthRequest'
+      responses:
+        '200':
+          description: 认证成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorAuthResponse'
+
+  /GetIdentityProviderList:
+    get:
+      tags:
+        - Authentication
+      summary: 可信身份提供商根凭证列表查询
+      description: 接入连接器查询可信身份提供商信息。
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityProviderListResponse'
+
+  /SyncConnectorInfo:
+    post:
+      tags:
+        - Sync
+      summary: 接入连接器身份信息上报
+      description: 将连接器身份信息同步至全域功能节点（Mock）。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorInfoSyncRequest'
+      responses:
+        '200':
+          description: 上报成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+
+  /connectors/deregister:
+    post:
+      tags:
+        - Lifecycle
+      summary: 接入连接器注销
+      description: 发起连接器身份注销及凭证吊销。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorDeregisterRequest'
+      responses:
+        '200':
+          description: 注销成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+
+  # --- Governance APIs ---
+  /admin/connectors:
+    get:
+      tags:
+        - Governance
+      summary: 运营方：获取连接器列表
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorListResponse'
+
+  /admin/connectors/{id}/audit:
+    post:
+      tags:
+        - Governance
+      summary: 运营方：审核连接器接入
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                approved:
+                  type: boolean
+      responses:
+        '200':
+          description: 审核成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+
+components:
+  schemas:
+    BaseResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "000000"
+        message:
+          type: string
+          example: "成功"
+
+    # --- 注册相关模型 (表 10-12) ---
+    ConnectorRegisterRequest:
+      type: object
+      required: [baseInfo, extendInfo]
+      properties:
+        baseInfo:
+          type: object
+          required: [connectorName, connectorJoinType, enterpriseCode]
+          properties:
+            connectorName:
+              type: string
+              description: 接入连接器名称
+            connectorIpList:
+              type: array
+              items:
+                type: string
+            connectorDomainList:
+              type: array
+              items:
+                type: string
+            connectorJoinType:
+              type: string
+              description: "1:专线, 2:互联网(固定IP), 3:互联网(无固定IP), 4:高速数据网, 5:其他"
+              enum: ["1", "2", "3", "4", "5"]
+            enterpriseName:
+              type: string
+            enterpriseCode:
+              type: string
+              description: 所属法人统一社会信用代码
+        extendInfo:
+          type: object
+          properties:
+            supplierName:
+              type: string
+            supplierCode:
+              type: string
+            connectorSN:
+              type: string
+            connectorVersion:
+              type: string
+            connectorType:
+              type: string
+              description: "0:标准型, 1:全功能型"
+              enum: ["0", "1"]
+            connectorMac:
+              type: string
+        attachInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttachInfo'
+
+    AttachInfo:
+      type: object
+      properties:
+        attachType:
+          type: string
+        attachName:
+          type: string
+        attachCode:
+          type: string
+        issueOrg:
+          type: string
+        issueDate:
+          type: string
+          format: date
+        expireDate:
+          type: string
+          format: date
+        verifyUrl:
+          type: string
+        description:
+          type: string
+
+    ConnectorRegisterResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                identityCode:
+                  type: string
+                  description: 生成的唯一身份标识
+                credential:
+                  type: string
+                  description: 签发的身份凭证(Mock)
+
+    # --- 认证相关模型 ---
+    ConnectorAuthRequest:
+      type: object
+      required: [identityCode, credential, signature]
+      properties:
+        identityCode:
+          type: string
+        credential:
+          type: string
+        signature:
+          type: string
+        timestamp:
+          type: string
+
+    ConnectorAuthResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                serverCredential:
+                  type: string
+                  description: 节点自身的凭证
+                serverSignature:
+                  type: string
+                  description: 节点自身的签名
+
+    IdentityProviderListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                rootCertList:
+                  type: array
+                  items:
+                    type: string
+
+    # --- 同步相关模型 ---
+    ConnectorInfoSyncRequest:
+      type: object
+      required: [baseInfo, extendInfo]
+      properties:
+        baseInfo:
+          type: object
+          # 复用注册时的结构，增加必须的 identityCode
+          properties:
+            identityCode:
+              type: string
+            connectorName:
+              type: string
+            connectorJoinType:
+              type: string
+            enterpriseCode:
+              type: string
+            identityStatus:
+              type: string
+              description: "1:正常, 0:注销"
+            authTime:
+              type: string
+              format: date
+        extendInfo:
+          type: object
+          properties:
+            connectorType:
+              type: string
+            connectorMac:
+              type: string
+
+    # --- 注销相关模型 ---
+    ConnectorDeregisterRequest:
+      type: object
+      required: [identityCode, reason]
+      properties:
+        identityCode:
+          type: string
+        reason:
+          type: string
+
+    ConnectorListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  identityCode:
+                    type: string
+                  connectorName:
+                    type: string
+                  connectorJoinType:
+                    type: string
+                  enterpriseCode:
+                    type: string
+                  identityStatus:
+                    type: string
+                  authTime:
+                    type: string
+                    format: date
+                  connectorMac:
+                    type: string
+                  enterpriseName:
+                    type: string

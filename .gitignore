@@ -1,0 +1,48 @@
+# Maven
+target/
+*.war
+*.ear
+*.zip
+*.tar
+*.tar.gz
+mvnw
+*.cmd
+
+# Node.js / Frontend
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+*.classpath
+*.project
+*.settings/
+.DS_Store
+
+# Logs
+logs/
+*.log
+*.out
+
+# Temporary files
+.gemini/
+*.tmp
+*.bak
+*.swp
+
+# Python (scripts)
+__pycache__/
+*.py[cod]
+
+# Java
+*.class

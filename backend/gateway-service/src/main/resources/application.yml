@@ -1,0 +1,51 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: identity-route
+          uri: lb://identity-service
+          predicates:
+            - Path=/api/v1/identity/**
+          filters:
+            - StripPrefix=3
+        - id: catalog-route
+          uri: lb://catalog-service
+          predicates:
+            - Path=/api/v1/catalog/**
+          filters:
+            - StripPrefix=3
+        - id: connector-route-direct
+          uri: lb://connector-service
+          predicates:
+            - Path=/api/v1/connector/**
+          filters:
+            - StripPrefix=3
+        - id: space-route
+          uri: lb://space-service
+          predicates:
+            - Path=/api/v1/space/**
+          filters:
+            - StripPrefix=3
+        - id: contract-route
+          uri: lb://contract-service
+          predicates:
+            - Path=/api/v1/contract/**
+          filters:
+            - StripPrefix=3
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+logging:
+  file:
+    name: logs/gateway-service.log

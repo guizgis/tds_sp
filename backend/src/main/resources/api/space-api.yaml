@@ -1,0 +1,338 @@
+openapi: 3.0.3
+info:
+  title: TDS Space Management API
+  version: 1.0.0
+  description: API for managing logical spaces and their members in the Trusted Data Space.
+
+paths:
+  /spaces:
+    get:
+      tags: [Space]
+      summary: List all logical spaces
+      responses:
+        '200':
+          description: A list of spaces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Space'
+    post:
+      tags: [Space]
+      summary: Create a new logical space
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpaceCreateRequest'
+      responses:
+        '201':
+          description: Space created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+
+  /spaces/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Space]
+      summary: Get space details
+      responses:
+        '200':
+          description: Space details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+    put:
+      tags: [Space]
+      summary: Update space information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpaceUpdateRequest'
+      responses:
+        '200':
+          description: Space updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+    delete:
+      tags: [Space]
+      summary: Delete a logical space
+      responses:
+        '204':
+          description: Space deleted
+
+  /spaces/{id}/members/apply:
+    post:
+      tags: [Member]
+      summary: Apply to join a space
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberApplyRequest'
+      responses:
+        '202':
+          description: Application submitted
+
+  /spaces/{id}/members/approve:
+    post:
+      tags: [Member]
+      summary: Approve or reject a member application
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberApprovalRequest'
+      responses:
+        '200':
+          description: Application processed
+
+  /spaces/{id}/members:
+    get:
+      tags: [Member]
+      summary: List space members
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SpaceMember'
+
+  /spaces/{id}/report:
+    post:
+      tags: [Monitoring]
+      summary: Trigger status reporting to regional/industry nodes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Report triggered successfully
+
+  /spaces/{id}/usage-logs:
+    get:
+      tags: [Monitoring]
+      summary: Get usage logs for a space
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of usage logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UsageLog'
+
+  /spaces/{id}/simulate-usage:
+    post:
+      tags: [Monitoring]
+      summary: Mock endpoint to simulate resource usage and violation alerting
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resourceId:
+                  type: string
+                participantId:
+                  type: string
+                action:
+                  type: string
+                isViolation:
+                  type: boolean
+      responses:
+        '200':
+          description: Usage simulated
+
+  /spaces/{id}/audit:
+    post:
+      tags: [Space]
+      summary: Audit a space creation request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                approved:
+                  type: boolean
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: Audited successfully
+
+components:
+  schemas:
+    Space:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, ACTIVE, INACTIVE, DELETED]
+        usagePolicies:
+          type: array
+          items:
+            type: string
+        resourceIds:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    SpaceCreateRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        usagePolicies:
+          type: array
+          items:
+            type: string
+
+    SpaceUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+        usagePolicies:
+          type: array
+          items:
+            type: string
+        resourceIds:
+          type: array
+          items:
+            type: string
+
+    MemberApplyRequest:
+      type: object
+      required: [participantId, requestedRole]
+      properties:
+        participantId:
+          type: string
+        requestedRole:
+          type: string
+          enum: [PROVIDER, CONSUMER, SERVICE_PROVIDER, REGULATOR]
+        reason:
+          type: string
+
+    MemberApprovalRequest:
+      type: object
+      required: [applicationId, approved]
+      properties:
+        applicationId:
+          type: string
+        approved:
+          type: boolean
+        assignedRole:
+          type: string
+          enum: [PROVIDER, CONSUMER, SERVICE_PROVIDER, REGULATOR]
+
+    SpaceMember:
+      type: object
+      properties:
+        participantId:
+          type: string
+        role:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED]
+
+    UsageLog:
+      type: object
+      properties:
+        id:
+          type: string
+        spaceId:
+          type: string
+        resourceId:
+          type: string
+        participantId:
+          type: string
+        action:
+          type: string
+        status:
+          type: string
+        evidenceHash:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

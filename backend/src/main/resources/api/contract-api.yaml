@@ -1,0 +1,390 @@
+openapi: 3.0.3
+info:
+  title: TDS-SP Digital Contract Management API
+  description: |
+    数字合约管理接口，严格遵循 TC609-6-2025-14《可信数据空间 数字合约技术要求》标准。
+    涵盖合约模板、发起、协商、备案、履行及终止全生命周期管理。
+  version: 1.0.0
+
+servers:
+  - url: /api/v1/contract
+    description: Contract Service Base URL
+
+paths:
+  /contractTemplate:
+    post:
+      tags:
+        - Template
+      summary: 合约模板接口
+      description: 参与方连接器向平台请求数字合约通用模板。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateRequest'
+      responses:
+        '200':
+          description: 模板获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateResponse'
+
+  /contractCreate:
+    post:
+      tags:
+        - Lifecycle
+      summary: 合约发起接口
+      description: 参与方连接器或平台发起数字合约。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractCreateRequest'
+      responses:
+        '200':
+          description: 合约发起成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractCreateResponse'
+
+  /contractNegotiate:
+    post:
+      tags:
+        - Lifecycle
+      summary: 合约协商接口
+      description: 参与方点对点或通过平台进行合约协商、修订与签署。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractNegotiateRequest'
+      responses:
+        '200':
+          description: 协商结果返回
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractNegotiateResponse'
+
+  /contractRegistrate:
+    post:
+      tags:
+        - Lifecycle
+      summary: 合约备案接口
+      description: 对已签署的数字合约至平台进行备案存证。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractRegistrateRequest'
+      responses:
+        '200':
+          description: 备案成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractRegistrateResponse'
+
+  /contractExecution:
+    post:
+      tags:
+        - Monitoring
+      summary: 合约履行接口
+      description: 策略执行者（如连接器）定期上报履行状态及策略执行日志。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractExecutionRequest'
+      responses:
+        '200':
+          description: 上报成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+
+  /contractTerminate:
+    post:
+      tags:
+        - Lifecycle
+      summary: 合约终止接口
+      description: 解除合同，更新合约状态。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractTerminateRequest'
+      responses:
+        '200':
+          description: 终止成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+
+components:
+  schemas:
+    # --- 基础模型 ---
+    BaseResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: "0: 成功, 1: 失败"
+          example: "0"
+
+    # --- 模板模型 ---
+    TemplateRequest:
+      type: object
+      required: [issuerId, issuerEntityId]
+      properties:
+        templateId:
+          type: string
+          maxLength: 36
+        issuerId:
+          type: string
+          description: 发起主体唯一标识 (连接器/业务节点)
+        issuerEntityId:
+          type: string
+          description: 发起方用户主体身份标识码
+
+    TemplateResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            template:
+              type: object
+              description: 返回合约模板内容 (JSON格式)
+
+    # --- 合约发起与协商模型 ---
+    ContractCreateRequest:
+      type: object
+      required: [contractName, contractAbstract, issueTime, activationTime, endTime, signMode, issuerId, issuerEntityId, signature]
+      properties:
+        contractName:
+          type: string
+          maxLength: 128
+        contractAbstract:
+          type: string
+          maxLength: 1024
+        issueTime:
+          type: string
+          format: date-time
+        activationTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        signMode:
+          type: string
+          description: "01: 点对点协商, 02: 平台参与协商"
+          enum: ["01", "02"]
+        issuerId:
+          type: string
+        issuerEntityId:
+          type: string
+        signature:
+          type: string
+          description: 发起方数字签名
+
+    ContractCreateResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            contractId:
+              type: string
+              maxLength: 47
+              description: 标准 47 位合约标识码
+
+    ContractNegotiateRequest:
+      type: object
+      required: [contractId, strategy]
+      properties:
+        contractName:
+          type: string
+          maxLength: 128
+        contractId:
+          type: string
+          maxLength: 47
+        strategy:
+          $ref: '#/components/schemas/ContractStrategy'
+        signatureList:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContractSignature'
+
+    ContractNegotiateResponse:
+      type: object
+      properties:
+        negotiationStatus:
+          type: string
+          description: "0: 协商成功, 1: 协商中/失败"
+
+    # --- 备案模型 ---
+    ContractRegistrateRequest:
+      type: object
+      required: [contractId, strategy, signatoryEntities, signatoryTime]
+      properties:
+        contractName:
+          type: string
+        contractId:
+          type: string
+        strategy:
+          $ref: '#/components/schemas/ContractStrategy'
+        signatoryEntities:
+          type: array
+          items:
+            $ref: '#/components/schemas/SignatoryEntity'
+        signatoryTime:
+          type: string
+          format: date-time
+        contractExpansionItem:
+          type: string
+
+    ContractRegistrateResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            contractHash:
+              type: string
+              description: 合约存证哈希 (SHA-256)
+
+    # --- 履行模型 ---
+    ContractExecutionRequest:
+      type: object
+      required: [contractId, executedStrategy, reportTime]
+      properties:
+        contractId:
+          type: string
+        executedStrategy:
+          type: object
+          required: [executedStrategyId, executedActions, executionResult]
+          properties:
+            executedStrategyId:
+              type: string
+            executedActions:
+              type: array
+              items:
+                type: string
+            executionResult:
+              type: string
+            executionDetails:
+              type: string
+        reportTime:
+          type: string
+          format: date-time
+
+    # --- 终止模型 ---
+    ContractTerminateRequest:
+      type: object
+      required: [contractId, issueTime, terminateType, issuerId, signature]
+      properties:
+        contractId:
+          type: string
+        issueTime:
+          type: string
+          format: date-time
+          description: 同意解除时间
+        terminateType:
+          type: string
+          enum: ["01", "02"]
+          description: "01: 提前解除, 02: 到期解除"
+        scheduledEndTime:
+          type: string
+          format: date-time
+        agreedEndTime:
+          type: string
+          format: date-time
+        issuerId:
+          type: string
+        signature:
+          type: string
+
+    # --- 策略核心模型 (核心字典对齐) ---
+    ContractStrategy:
+      type: object
+      required: [subjectInfo, executionNodeInfo, actions]
+      properties:
+        subjectInfo:
+          type: object
+          required: [dataProductId]
+          properties:
+            dataProductId:
+              type: string
+              maxLength: 65
+            dataProductName:
+              type: string
+        executionNodeInfo:
+          type: object
+          required: [providerNodeId]
+          properties:
+            providerNodeId:
+              type: string
+            providerNodeName:
+              type: string
+            consumerNodeId:
+              type: string
+            consumerNodeName:
+              type: string
+        actions:
+          type: array
+          items:
+            type: string
+            enum: [transform, anonymize, desensitize, access, read, reproduce, storage, download, process, jointDevelop, distribute, compute, grantUse, plicyTransmit, delivery, sell, logRecordSend, delete, alert, compensate]
+        constraints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Constraint'
+        policyExpansion:
+          type: string
+
+    Constraint:
+      type: object
+      required: [constraintName, constraintOperator, constraintValue]
+      properties:
+        constraintName:
+          type: string
+          description: 对应标准 C.6 约束名称
+        constraintOperator:
+          type: string
+          description: "01: eq, 02: gt, 03: gteq, 04: hasPart, 05: isA, 06: isAllOf, 07: isAnyOf, 08: isNoneOf, 09: isPartOf, 10: lt, 11: lteq, 12: neq"
+          enum: ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+        constraintValue:
+          type: string
+
+    SignatoryEntity:
+      type: object
+      required: [signatoryEntityId]
+      properties:
+        signatoryEntityId:
+          type: string
+        signatoryEntityName:
+          type: string
+        signatoryType:
+          type: string
+          enum: ["01", "02", "03", "04"]
+          description: "01: 提供方, 02: 使用方, 03: 服务方, 04: 其他"
+
+    ContractSignature:
+      type: object
+      properties:
+        entityId:
+          type: string
+        signature:
+          type: string
+        signatoryTime:
+          type: string
+          format: date-time

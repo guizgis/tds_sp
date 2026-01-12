@@ -1,0 +1,802 @@
+openapi: 3.0.3
+info:
+  title: NDI Identity Management API
+  description: |
+    User Identity Management and Access Requirements based on NDI-TR-2025-03.
+    Includes Identity Registration, Authentication, and Information Query.
+  version: 1.0.0
+servers:
+  - url: /api/v1/identity
+    description: Identity Service API
+
+paths:
+  /RegisterPerson:
+    post:
+      summary: 个人用户身份注册 (Register Personal Identity)
+      description: |
+        提交个人身份信息进行注册。在本平台模拟模式下，将直接生成 Mock DID/证书。
+      operationId: registerPerson
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonIdentityData'
+      responses:
+        '200':
+          description: Successful registration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationResponse'
+
+  /RegisterEnterprise:
+    post:
+      summary: 法人或其他组织身份注册 (Register Enterprise Identity)
+      description: |
+        提交法人或其他组织身份信息进行注册。
+      operationId: registerEnterprise
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnterpriseIdentityData'
+      responses:
+        '200':
+          description: Successful registration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationResponse'
+
+  /RegisterOperator:
+    post:
+      summary: 法人或其他组织经办人身份注册 (Register Operator Identity)
+      description: |
+        提交经办人身份信息及授权材料进行注册。
+      operationId: registerOperator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperatorIdentityData'
+      responses:
+        '200':
+          description: Successful registration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationResponse'
+
+  /Login:
+    post:
+      summary: 用户登录 (User Login)
+      description: |
+        本地用户登录认证。
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login Successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+
+  /GetToken:
+    post:
+      summary: 获取身份信息访问令牌 (Get Identity Access Token)
+      operationId: getToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - authCode
+              properties:
+                authCode:
+                  type: string
+                  maxLength: 64
+                  description: 用户授权令牌
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTokenResponse'
+
+  /GetPersonInfo:
+    post:
+      summary: 个人用户身份信息查询 (Get Personal Identity Info)
+      operationId: getPersonInfo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPersonInfoResponse'
+
+  /GetEnterpriseInfo:
+    post:
+      summary: 法人或其他组织用户身份信息查询 (Get Enterprise Identity Info)
+      operationId: getEnterpriseInfo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEnterpriseInfoResponse'
+
+  /GetOperatorInfo:
+    post:
+      summary: 法人或其他组织经办人用户身份信息查询 (Get Operator Identity Info)
+      operationId: getOperatorInfo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOperatorInfoResponse'
+
+  /GetPersonBaseInfo:
+    post:
+      summary: 跨域个人用户身份信息查询 (Cross-domain Person Info)
+      operationId: getPersonBaseInfo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPersonBaseInfoResponse'
+
+  /GetEnterpriseBaseInfo:
+    post:
+      summary: 跨域法人或其他组织用户身份信息查询 (Cross-domain Enterprise Info)
+      operationId: getEnterpriseBaseInfo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEnterpriseBaseInfoResponse'
+
+  /GetOperatorBaseInfo:
+    post:
+      summary: 跨域法人或其他组织经办人用户身份信息查询 (Cross-domain Operator Info)
+      operationId: getOperatorBaseInfo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOperatorBaseInfoResponse'
+
+  /admin/registrations:
+    get:
+      summary: 查询注册申请列表 (Admin List Registrations)
+      description: 管理主体查询注册申请列表，支持按状态过滤。
+      operationId: adminListRegistrations
+      parameters:
+        - name: status
+          in: query
+          description: Filter by status (e.g., '0' for pending)
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of registrations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationListResponse'
+
+  /admin/registrations/{id}/audit:
+    post:
+      summary: 审批注册申请 (Admin Audit Registration)
+      description: 管理主体对注册申请进行审批（通过或拒绝）。
+      operationId: adminAuditRegistration
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Registration ID (IdentityCode)
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuditRequest'
+      responses:
+        '200':
+          description: Audit processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+
+  /admin/identities/{id}/status:
+    put:
+      summary: 更新主体状态 (Update Identity Status)
+      description: 启用或停用已注册的身份主体。
+      operationId: updateIdentityStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  description: "1-Available, 0-Unavailable"
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+
+  /admin/identities/{id}:
+    delete:
+      summary: 注销身份主体 (Deregister Identity)
+      description: 永久注销身份主体及其所有关联凭证。
+      operationId: deregisterIdentity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deregistered successfully
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - identityCode
+      properties:
+        identityCode:
+          type: string
+          description: 用户身份标识 (DID)
+        credential:
+          type: string
+          description: 数字证书或签名
+
+    LoginResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            authCode:
+              type: string
+              description: 用户授权令牌
+
+    TokenRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          maxLength: 64
+          description: 身份信息访问令牌
+
+    BaseResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          maxLength: 10
+          description: 执行结果代码 (See Appendix C)
+        message:
+          type: string
+          maxLength: 32
+          description: 执行结果信息
+
+    RegistrationResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required:
+                - identityCode
+              properties:
+                identityCode:
+                  type: string
+                  maxLength: 64
+                  description: 生成的唯一身份标识
+                credential:
+                  type: string
+                  description: 生成的凭证信息 (Cert/DID Doc)
+
+    GetTokenResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  maxLength: 64
+                  description: 身份信息访问令牌 (See Appendix D)
+
+    GetPersonInfoResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/PersonIdentityData'
+
+    GetEnterpriseInfoResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/EnterpriseIdentityData'
+
+    GetOperatorInfoResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/OperatorIdentityData'
+
+    GetPersonBaseInfoResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/PersonBaseInfo'
+
+    GetEnterpriseBaseInfoResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/EnterpriseBaseInfo'
+
+    GetOperatorBaseInfoResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/OperatorBaseInfo'
+
+    AuditRequest:
+      type: object
+      required:
+        - approved
+      properties:
+        approved:
+          type: boolean
+          description: 是否通过 (True=Pass, False=Reject)
+        rejectReason:
+          type: string
+          description: 拒绝原因
+
+    RegistrationSummary:
+      type: object
+      properties:
+        identityCode:
+          type: string
+        name:
+          type: string
+          description: 姓名或企业名称
+        type:
+          type: string
+          description: User Type (Person/Enterprise/Operator)
+        status:
+          type: string
+          description: 0-Pending, 1-Active, 2-Rejected
+        submitTime:
+          type: string
+          format: date-time
+
+    RegistrationListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/RegistrationSummary'
+
+    PersonBaseInfo:
+      type: object
+      required:
+        - fullName
+        - certType
+        - certCode
+        - certEffdate
+        - certExpdate
+        - phone
+      properties:
+        identityCode:
+          type: string
+          maxLength: 64
+          description: 唯一身份标识 (注册后由系统生成)
+        fullName:
+          type: string
+          maxLength: 50
+          description: 姓名
+        certType:
+          type: string
+          maxLength: 2
+          description: 证件类型
+        certCode:
+          type: string
+          maxLength: 50
+          description: 证件号码
+        certEffdate:
+          type: string
+          format: date
+          description: 证件号码有效起始日期
+        certExpdate:
+          type: string
+          format: date
+          description: 证件号码有效截止日期
+        phone:
+          type: string
+          maxLength: 11
+          description: 手机号
+        authLevel:
+          type: string
+          maxLength: 2
+          description: 个人实名认证等级
+        authType:
+          type: string
+          maxLength: 2
+          description: 个人实名认证方式
+        authTime:
+          type: string
+          format: date-time
+          description: 实名认证时间
+        identityStatus:
+          type: string
+          maxLength: 2
+          description: 身份状态
+
+    PersonExtendInfo:
+      type: object
+      properties:
+        nationality:
+          type: string
+          maxLength: 100
+        sex:
+          type: string
+          maxLength: 20
+        birthDate:
+          type: string
+          maxLength: 20
+        socialSecurityCard:
+          type: string
+          maxLength: 50
+        socialSecurityCardSite:
+          type: string
+          maxLength: 100
+        alipayAccount:
+          type: string
+          maxLength: 50
+        weixinAccount:
+          type: string
+          maxLength: 50
+        userEmail:
+          type: string
+          maxLength: 50
+        userAddress:
+          type: string
+          maxLength: 100
+
+    AttachInfo:
+      type: object
+      properties:
+        attachType:
+          type: string
+          maxLength: 50
+        attachName:
+          type: string
+          maxLength: 100
+        attachCode:
+          type: string
+          maxLength: 64
+        issueOrg:
+          type: string
+          maxLength: 100
+        issueDate:
+          type: string
+          format: date
+        expireDate:
+          type: string
+          format: date
+        verifyUrl:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 200
+
+    PersonIdentityData:
+      type: object
+      properties:
+        baseInfo:
+          $ref: '#/components/schemas/PersonBaseInfo'
+        extendInfo:
+          $ref: '#/components/schemas/PersonExtendInfo'
+        attachInfo:
+          $ref: '#/components/schemas/AttachInfo'
+
+    EnterpriseBaseInfo:
+      type: object
+      required:
+        - enterpriseName
+        - enterpriseCode
+        - enterpriseType
+        - operatingPeriodBegin
+        - operatingPeriodEnd
+        - legalPerson
+        - legalPersonCertno
+      properties:
+        identityCode:
+          type: string
+          maxLength: 64
+        enterpriseName:
+          type: string
+          maxLength: 50
+        enterpriseCode:
+          type: string
+          maxLength: 50
+          description: 统一社会信用代码
+        enterpriseType:
+          type: string
+          maxLength: 2
+        operatingPeriodBegin:
+          type: string
+          format: date
+        operatingPeriodEnd:
+          type: string
+          format: date
+        authType:
+          type: string
+          maxLength: 2
+        authStatus:
+          type: string
+          maxLength: 2
+        authDate:
+          type: string
+          format: date-time
+        legalPerson:
+          type: string
+          maxLength: 50
+        legalPersonCertno:
+          type: string
+          maxLength: 50
+        legalPersonAuthLevel:
+          type: string
+          maxLength: 2
+        legalPersonAuthType:
+          type: string
+          maxLength: 2
+        identityStatus:
+          type: string
+          maxLength: 2
+
+    EnterpriseExtendInfo:
+      type: object
+      properties:
+        enterpriseAddress:
+          type: string
+          maxLength: 200
+        regAmount:
+          type: string
+          maxLength: 50
+        regDate:
+          type: string
+          format: date
+        businessScope:
+          type: string
+          maxLength: 200
+        industryCategory:
+          type: string
+          maxLength: 50
+        industryCategory2:
+          type: string
+          maxLength: 50
+        businessLicense:
+          type: string
+          maxLength: 200
+        approvalAuthority:
+          type: string
+          maxLength: 100
+        socialSecurityCard:
+          type: string
+          maxLength: 50
+        socialSecurityCardSite:
+          type: string
+          maxLength: 100
+        legalPersonPhone:
+          type: string
+          maxLength: 11
+        legalPersonEmail:
+          type: string
+          maxLength: 50
+        legalPersonStatus:
+          type: string
+          maxLength: 2
+
+    EnterpriseIdentityData:
+      type: object
+      properties:
+        baseInfo:
+          $ref: '#/components/schemas/EnterpriseBaseInfo'
+        extendInfo:
+          $ref: '#/components/schemas/EnterpriseExtendInfo'
+        attachInfo:
+          $ref: '#/components/schemas/AttachInfo'
+
+    OperatorBaseInfo:
+      type: object
+      required:
+        - operator
+        - operatorIdType
+        - operatorId
+        - enterpriseCode
+      properties:
+        identityCode:
+          type: string
+          maxLength: 64
+        operator:
+          type: string
+          maxLength: 50
+        operatorIdType:
+          type: string
+          maxLength: 2
+        operatorId:
+          type: string
+          maxLength: 50
+        operatorAuthLevel:
+          type: string
+          maxLength: 2
+        operatorAuthType:
+          type: string
+          maxLength: 2
+        authorizationType:
+          type: string
+          maxLength: 2
+        enterpriseCode:
+          type: string
+          maxLength: 50
+        authStatus:
+          type: string
+          maxLength: 2
+        authTime:
+          type: string
+          format: date-time
+
+    OperatorExtendInfo:
+      type: object
+      required:
+        - enterpriseName
+        - businessLicense
+      properties:
+        enterpriseName:
+          type: string
+          maxLength: 100
+        businessLicense:
+          type: string
+          maxLength: 100
+        socialSecurityCard:
+          type: string
+          maxLength: 50
+        socialSecurityCardSite:
+          type: string
+          maxLength: 100
+        alipayAccount:
+          type: string
+          maxLength: 50
+        weixinAccount:
+          type: string
+          maxLength: 50
+
+    OperatorIdentityData:
+      type: object
+      properties:
+        baseInfo:
+          $ref: '#/components/schemas/OperatorBaseInfo'
+        extendInfo:
+          $ref: '#/components/schemas/OperatorExtendInfo'
+        attachInfo:
+          $ref: '#/components/schemas/AttachInfo'
