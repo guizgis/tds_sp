@@ -32,7 +32,16 @@ const OperatorLayout: React.FC = () => {
     { key: '/dashboard', icon: <DashboardOutlined />, label: '治理概览' },
     { key: '/identity', icon: <TeamOutlined />, label: '身份管理' },
     { key: '/connector', icon: <ApiOutlined />, label: '连接器管理' },
-    { key: '/catalog', icon: <AppstoreOutlined />, label: '目录管理' },
+    { 
+      key: '/catalog', 
+      icon: <AppstoreOutlined />, 
+      label: '目录管理',
+      children: [
+        { key: '/catalog/audit', label: '审核登记' },
+        { key: '/catalog/portal', label: '产品目录' },
+        { key: '/catalog/applications', label: '使用申请' },
+      ]
+    },
     { key: '/space', icon: <ClusterOutlined />, label: '空间管理' },
     { key: '/contract', icon: <FileProtectOutlined />, label: '数字合约管理' },
     { key: '/settings', icon: <SettingOutlined />, label: '平台配置' },

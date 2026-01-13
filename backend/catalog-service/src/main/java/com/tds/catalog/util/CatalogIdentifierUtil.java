@@ -12,13 +12,15 @@ public class CatalogIdentifierUtil {
     private static final Random RANDOM = new Random();
 
     /**
-     * Generates a FrontCode: AreaCode (6 digits) + OrgCode
+     * Generates a FrontCode: AreaCode (6 digits) + OrgCode (9 digits)
      */
     public static String generateFrontCode(String areaCode, String orgCode) {
         if (areaCode == null || areaCode.length() != 6) {
             throw new IllegalArgumentException("AreaCode must be 6 digits");
         }
-        return areaCode + orgCode;
+        // OrgCode should be 9 digits or padded
+        String paddedOrg = String.format("%-9s", orgCode).replace(' ', '0');
+        return areaCode + paddedOrg;
     }
 
     /**
@@ -29,6 +31,7 @@ public class CatalogIdentifierUtil {
             throw new IllegalArgumentException("TypeID must be 1 character");
         }
         String serialStr = String.format("%06d", serialNo);
+        // NDI-TR-2025-04 simple check code simulation (MOD 36 or similar)
         String checkCode = generateCheckCode();
         return typeId + serialStr + checkCode;
     }

@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const client = axios.create({
-  baseURL: 'http://127.0.0.1:8088', // Updated Gateway Port
+  // Use relative path to leverage Vite proxy in dev and same-origin in prod
+  baseURL: '', 
   headers: {
     'Content-Type': 'application/json',
   },

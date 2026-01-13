@@ -2,7 +2,6 @@ package com.tds.catalog.service;
 
 import com.tds.catalog.model.CatalogItem;
 import com.tds.catalog.model.CatalogItemRequest;
-import com.tds.catalog.model.TopicCategory;
 import com.tds.catalog.model.UsageApplication;
 import com.tds.catalog.model.UsageRequest;
 
@@ -11,7 +10,7 @@ import java.util.List;
 public interface CatalogService {
     CatalogItem registerCatalog(CatalogItemRequest request);
     CatalogItem getCatalog(String id);
-    List<CatalogItem> searchCatalogs(String keyword, TopicCategory topicCategory, String industryCategory, String status, String spaceId);
+    List<CatalogItem> searchCatalogs(String keyword, String catalogType, String topicCategory, String industryCategory, String status, String spaceId);
     CatalogItem updateCatalog(String id, CatalogItemRequest request);
     void cancelCatalog(String id);
     

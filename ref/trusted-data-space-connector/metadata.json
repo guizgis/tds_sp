@@ -1,0 +1,5 @@
+{
+  "name": "Trusted Data Space Connector",
+  "description": "A management dashboard for connecting and configuring external data resources for a trusted data space environment.",
+  "requestFramePermissions": []
+}

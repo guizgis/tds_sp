@@ -78,24 +78,42 @@ def inject_catalogs():
     conn = get_conn()
     cur = conn.cursor()
 
-    # 1. 待审核产品
+    # 1. 待审核产品 (PENDING) - 用于“产品准入审核”签页
     cur.execute("""
-        INSERT INTO catalogs (id, name, description, version, status, provider_id, create_time, update_time, full_data_json)
-        VALUES (%s, '全国企业工商全维数据(待审)', '包含企业基本信息、分支机构及变更记录', '1.0', 'PENDING', 'did:tds:mock:active_corp_01', NOW(), NOW(), '{\"name\":\"全国企业工商全维数据(待审)\",\"topicCategory\":\"B0000\"}')
+        INSERT INTO catalogs (id, name, description, version, status, provider_id, create_time, update_time, full_data_json, catalog_type)
+        VALUES (%s, '企业征信评分API(待审核)', '实时查询企业信用评分及风险提示', '1.0', 'PENDING', 'did:tds:mock:active_corp_01', NOW(), NOW(), 
+        '{\"name\":\"企业征信评分API(待审核)\",\"topicCategory\":\"B0000\",\"sourceType\":\"002\",\"securityLevel\":\"003\",\"deliveryMode\":\"002\"}', 'PRODUCT')
         ON CONFLICT DO NOTHING;
-    """, (f"110101DID:CAT_{uuid.uuid4().hex[:6]}",))
+    """, (f"TMP_{uuid.uuid4().hex[:8].upper()}",))
 
-    # 2. 已发布产品
+    # 2. 审核通过产品 (AUDITED) - 用于“产品标识登记”签页
     cur.execute("""
-        INSERT INTO catalogs (id, name, description, version, status, provider_id, create_time, update_time, full_data_json)
-        VALUES (%s, '城市交通实时路况API', '高精度实时路况数据接口，支持秒级更新', '2.1', 'ACTIVE', 'did:tds:mock:active_corp_01', NOW() - INTERVAL '10 days', NOW(), '{\"name\":\"城市交通实时路况API\",\"topicCategory\":\"A0000\"}')
+        INSERT INTO catalogs (id, name, description, version, status, provider_id, create_time, update_time, full_data_json, catalog_type)
+        VALUES (%s, '全球气象预报历史数据', '覆盖过去50年的全球分时段气象监测数据', '2.0', 'AUDITED', 'did:tds:mock:weather_org', NOW() - INTERVAL '1 days', NOW(), 
+        '{\"name\":\"全球气象预报历史数据\",\"topicCategory\":\"C0000\",\"sourceType\":\"001\",\"securityLevel\":\"002\",\"deliveryMode\":\"001\"}', 'PRODUCT')
+        ON CONFLICT DO NOTHING;
+    """, (f"TMP_{uuid.uuid4().hex[:8].upper()}",))
+
+    # 3. 已登记产品 (REGISTERED) - 准备发布环节
+    cur.execute("""
+        INSERT INTO catalogs (id, name, description, version, status, provider_id, create_time, update_time, full_data_json, catalog_type)
+        VALUES (%s, '金融行业反欺诈特征库', '基于多维数据的风险特征集', '1.5', 'REGISTERED', 'did:tds:mock:finance_node', NOW() - INTERVAL '3 days', NOW(), 
+        '{\"name\":\"金融行业反欺诈特征库\",\"topicCategory\":\"B0000\",\"sourceType\":\"003\",\"securityLevel\":\"004\",\"deliveryMode\":\"001\"}', 'PRODUCT')
+        ON CONFLICT DO NOTHING;
+    """, ("110101DID:CAT_REG_01",))
+
+    # 4. 已发布产品 (ACTIVE) - 在产品目录可见
+    cur.execute("""
+        INSERT INTO catalogs (id, name, description, version, status, provider_id, create_time, update_time, full_data_json, catalog_type)
+        VALUES (%s, '城市交通实时路况API', '高精度实时路况数据接口，支持秒级更新', '2.1', 'ACTIVE', 'did:tds:mock:active_corp_01', NOW() - INTERVAL '10 days', NOW(), 
+        '{\"name\":\"城市交通实时路况API\",\"topicCategory\":\"A0000\",\"sourceType\":\"001\",\"securityLevel\":\"001\",\"deliveryMode\":\"002\"}', 'PRODUCT')
         ON CONFLICT DO NOTHING;
     """, ("110101DID:CAT_ACTIVE_01",))
 
     conn.commit()
     cur.close()
     conn.close()
-    logging.info("Catalogs injected.")
+    logging.info("Catalogs injected with multi-stage statuses.")
 
 def inject_spaces():
     conn = get_conn()

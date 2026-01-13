@@ -41,10 +41,15 @@ paths:
           in: query
           schema:
             type: string
+        - name: catalogType
+          in: query
+          schema:
+            type: string
+            enum: [RESOURCE, PRODUCT]
         - name: topicCategory
           in: query
           schema:
-            $ref: '#/components/schemas/TopicCategory'
+            type: string
         - name: industryCategory
           in: query
           schema:
@@ -53,12 +58,10 @@ paths:
           in: query
           schema:
             type: string
-            enum: [PENDING, ACTIVE, CANCELLED]
         - name: spaceId
           in: query
           schema:
             type: string
-          description: Context of the current space to filter restricted products.
       responses:
         '200':
           description: List of catalogs
@@ -234,6 +237,7 @@ components:
       type: object
       required:
         - name
+        - catalogType
         - description
         - topicCategory
         - industryCategory
@@ -249,20 +253,24 @@ components:
       properties:
         name:
           type: string
+        catalogType:
+          type: string
+          enum: [RESOURCE, PRODUCT]
+          description: Distinguish between raw Data Resource and processed Data Product.
         description:
           type: string
         usagePolicy:
           type: string
           description: Usage strategy labels or policy descriptions
         topicCategory:
-          $ref: '#/components/schemas/TopicCategory'
+          type: string
         industryCategory:
           type: string
           description: GB/T 4754-2017 Industry Code
         organizationCategory:
           type: string
         applicationCategory:
-          $ref: '#/components/schemas/ApplicationCategory'
+          type: string
         sourceType:
           $ref: '#/components/schemas/SourceType'
         deliveryMode:
@@ -291,13 +299,15 @@ components:
               type: string
             status:
               type: string
-              enum: [PENDING, ACTIVE, CANCELLED]
+              description: 治理环节状态 (待审核, 审核通过, 已登记, 已发布, 已驳回)
             createTime:
               type: string
               format: date-time
             updateTime:
               type: string
               format: date-time
+            providerName:
+              type: string
 
     UsageRequest:
       type: object
@@ -333,22 +343,6 @@ components:
         submitTime:
           type: string
           format: date-time
-
-    TopicCategory:
-      type: string
-      enum:
-        - A0000 # Basic Resources
-        - B0000 # Industry Resources
-        - C0000 # Social Livelihood
-        - D0000 # Government Services
-
-    ApplicationCategory:
-      type: string
-      enum:
-        - S0000 # Government Governance
-        - T0000 # Livelihood Service
-        - U0000 # Industrial Development
-        - V0000 # Security Emergency
 
     SourceType:
       type: string

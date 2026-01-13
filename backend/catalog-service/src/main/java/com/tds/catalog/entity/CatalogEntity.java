@@ -10,6 +10,7 @@ public class CatalogEntity {
     @Id
     private String id;
     private String name;
+    private String catalogType; // RESOURCE or PRODUCT
     
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -26,6 +27,8 @@ public class CatalogEntity {
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
+    public String getCatalogType() { return catalogType; }
+    public void setCatalogType(String catalogType) { this.catalogType = catalogType; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }

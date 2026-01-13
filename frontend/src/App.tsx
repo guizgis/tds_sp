@@ -9,6 +9,9 @@ import OperatorLayout from './layouts/OperatorLayout';
 // Pages
 import Login from './pages/Login';
 import IdentityManagement from './pages/IdentityManagement';
+import CatalogAudit from './pages/CatalogAudit';
+import CatalogPortal from './pages/CatalogPortal';
+import UsageApplications from './pages/UsageApplications';
 import CatalogManagement from './pages/CatalogManagement';
 import Contracts from './pages/Contracts';
 import SpaceManagement from './pages/SpaceManagement';
@@ -40,10 +43,12 @@ const App: React.FC = () => {
           }
         >
           <Route path="/dashboard" element={<div>治理大屏开发中...</div>} />
-          <Route path="/identity" element={<IdentityManagement />} />
-          <Route path="/catalog" element={<CatalogManagement />} />
-          <Route path="/space" element={<SpaceManagement />} />
-          <Route path="/connector" element={<ConnectorManagement />} />
+          <Route path="identity" element={<IdentityManagement />} />
+          <Route path="connector" element={<ConnectorManagement />} />
+          <Route path="catalog/audit" element={<CatalogManagement />} />
+          <Route path="catalog/portal" element={<CatalogPortal />} />
+          <Route path="catalog/applications" element={<UsageApplications />} />
+          <Route path="space" element={<SpaceManagement />} />
           <Route path="/contract" element={<Contracts />} />
           <Route path="/settings" element={<div>系统全局配置开发中...</div>} />
         </Route>
