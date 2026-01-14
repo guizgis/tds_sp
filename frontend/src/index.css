@@ -1,17 +1,56 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #f1f5f9; /* Deepen background for better contrast */
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: 'JetBrains Mono', source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
 
 .ant-layout-header {
   line-height: 64px;
+}
+
+/* Sidebar Glass Submenu Override */
+.ant-menu-dark.ant-menu-inline .ant-menu-sub.ant-menu-inline {
+  background: rgba(0, 0, 0, 0.25) !important; /* Semi-transparent dark */
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.ant-menu-dark .ant-menu-item-selected {
+  background-color: #1890ff !important;
+  box-shadow: 0 4px 12px rgba(24,144,255,0.4);
+}
+
+/* UI/UX Pro Max Utilities */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85) !important; /* Increase opacity for contrast */
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0,0,0,0.04) !important; /* Stronger shadow */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px) scale(1.005);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.hover-lift {
+  transition: all 0.2s ease-in-out !important;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+.sidebar-glass {
+  background: rgba(0, 21, 41, 0.85) !important;
+  backdrop-filter: blur(24px) !important;
 }

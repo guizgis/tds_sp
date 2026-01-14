@@ -1,11 +1,13 @@
 import React, { useRef, useState } from 'react';
-import { message, Tag, Button, Tabs, Space, Card, Col, Row, Statistic } from 'antd';
+import { message, Tag, Button, Tabs, Space, Card, Col, Row, Statistic, Typography } from 'antd';
 import { ProTable, PageContainer } from '@ant-design/pro-components';
 import { catalogApi } from '../api/catalog';
 import type { CatalogItem } from '../api/catalog';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { AuditOutlined, FileProtectOutlined, CloudServerOutlined } from '@ant-design/icons';
+
+const { Text } = Typography;
 
 const CatalogManagement: React.FC = () => {
   const actionRefAudit = useRef<ActionType>();
@@ -24,33 +26,32 @@ const CatalogManagement: React.FC = () => {
   };
 
   const commonTableProps = {
-    cardBordered: false, // 移除边框，更现代
+    cardBordered: false, 
     options: { density: true, fullScreen: true, setting: true },
     search: { 
       filterType: 'query', 
       span: 6, 
       labelWidth: 'auto',
-      style: { marginBottom: 24, padding: '24px', background: '#fff', borderRadius: 8, boxShadow: '0 1px 2px 0 rgba(0,0,0,0.03)' }
+      className: 'glass-card',
+      style: { padding: '24px', borderRadius: 12, marginBottom: 24, background: 'rgba(255,255,255,0.4)' }
     } as const,
     scroll: { x: 1300 },
     pagination: { pageSize: 10 },
   };
 
-  // ... (columns definitions remain similar, but refine Tag colors)
   const columns: ProColumns<CatalogItem>[] = [
-    { title: '产品名称', dataIndex: 'name', copyable: true, ellipsis: true, width: 180, fixed: 'left', formItemProps: { rules: [{ required: true }] } },
+    { title: '产品名称', dataIndex: 'name', copyable: true, ellipsis: true, width: 180, fixed: 'left' },
     { 
       title: '主题分类', 
       dataIndex: 'topicCategory',
       width: 120,
       valueEnum: {
-        'A0000': { text: '综合政务', status: 'Default' },
-        'B0000': { text: '经济管理', status: 'Processing' },
-        'C0000': { text: '科技教育', status: 'Success' },
-        'D0000': { text: '文化卫生', status: 'Warning' },
+        'A0000': { text: '综合政务' },
+        'B0000': { text: '经济管理' },
+        'C0000': { text: '科技教育' },
+        'D0000': { text: '文化卫生' },
       }
     },
-    // ... other columns
     { 
       title: '数据来源', 
       dataIndex: 'sourceType',
@@ -66,8 +67,8 @@ const CatalogManagement: React.FC = () => {
       dataIndex: 'securityLevel',
       width: 100,
       render: (val) => {
-        const colors = { '001': 'green', '002': 'cyan', '003': 'orange', '004': 'red' };
-        return <Tag color={colors[val as keyof typeof colors] || 'blue'}>{`L${val || '2'}`}</Tag>;
+        const colors: any = { '001': 'green', '002': 'cyan', '003': 'orange', '004': 'red' };
+        return <Tag color={colors[val as string] || 'blue'} bordered={false}>{`L${val || '2'}`}</Tag>;
       }
     },
     { 
@@ -75,7 +76,7 @@ const CatalogManagement: React.FC = () => {
       dataIndex: 'providerName', 
       ellipsis: true,
       width: 180,
-      render: (_, record) => record.providerName || record.providerId 
+      render: (_, record) => <Text type="secondary">{record.providerName || record.providerId}</Text>
     },
     { title: '提交时间', dataIndex: 'createTime', valueType: 'dateTime', search: false, width: 160 },
   ];
@@ -88,9 +89,9 @@ const CatalogManagement: React.FC = () => {
       width: 180,
       fixed: 'right',
       render: (_, record) => [
-        <a key="view" onClick={() => { setSelectedCatalog(record); setIsDetailVisible(true); }}>详情</a>,
-        <a key="pass" style={{ color: '#52c41a', fontWeight: 500 }} onClick={() => handleAction(record.id, true, actionRefAudit)}>通过</a>,
-        <a key="reject" style={{ color: '#ff4d4f' }} onClick={() => handleAction(record.id, false, actionRefAudit)}>驳回</a>,
+        <Button key="view" type="text" size="small" onClick={() => { setSelectedCatalog(record); setIsDetailVisible(true); }}>详情</Button>,
+        <Button key="pass" type="link" size="small" style={{ color: '#52c41a' }} onClick={() => handleAction(record.id, true, actionRefAudit)}>通过</Button>,
+        <Button key="reject" type="link" danger size="small" onClick={() => handleAction(record.id, false, actionRefAudit)}>驳回</Button>,
       ],
     },
   ];
@@ -103,8 +104,8 @@ const CatalogManagement: React.FC = () => {
       ellipsis: true,
       width: 220,
       render: (id, record) => (record.status === '已登记' || record.status === '已发布') ? 
-        <Tag style={{ fontFamily: 'monospace', background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f' }}>{id}</Tag> : 
-        <Tag color="default">未分配</Tag>
+        <code style={{ background: '#f0f7ff', color: '#0050b3', padding: '2px 6px', borderRadius: 4, border: '1px solid #adc6ff' }}>{id}</code> : 
+        <Tag color="default" bordered={false}>未分配</Tag>
     },
     {
       title: '状态',
@@ -124,16 +125,16 @@ const CatalogManagement: React.FC = () => {
       fixed: 'right',
       render: (_, record) => {
         const actions = [
-          <a key="view" onClick={() => { setSelectedCatalog(record); setIsDetailVisible(true); }}>详情</a>,
+          <Button key="view" type="text" size="small" onClick={() => { setSelectedCatalog(record); setIsDetailVisible(true); }}>详情</Button>
         ];
         
         if (record.status === '审核通过') {
-          actions.push(<Button key="reg" type="primary" size="small" style={{ borderRadius: 4 }} onClick={() => handleAction(record.id, true, actionRefRegister)}>向节点登记</Button>);
+          actions.push(<Button key="reg" type="primary" size="small" style={{ borderRadius: 6 }} onClick={() => handleAction(record.id, true, actionRefRegister)}>向节点登记</Button>);
         } else if (record.status === '已登记' || record.status === '已发布') {
-          actions.push(<a key="update">更新</a>);
-          actions.push(<a key="revoke" style={{ color: '#ff4d4f' }}>撤销</a>);
+          actions.push(<Button key="update" type="link" size="small">更新</Button>);
+          actions.push(<Button key="revoke" type="text" danger size="small">撤销</Button>);
           if (record.status === '已登记') {
-            actions.push(<Button key="publish" type="dashed" size="small" style={{ borderColor: '#13c2c2', color: '#13c2c2' }} onClick={() => handleAction(record.id, true, actionRefRegister)}>发布</Button>);
+            actions.push(<Button key="publish" type="primary" ghost size="small" style={{ borderRadius: 6 }} onClick={() => handleAction(record.id, true, actionRefRegister)}>发布</Button>);
           }
         }
         return actions;
@@ -142,12 +143,25 @@ const CatalogManagement: React.FC = () => {
   ];
 
   const StatCard = ({ title, value, icon, color }: any) => (
-    <Card bordered={false} bodyStyle={{ padding: '20px 24px' }} style={{ height: '100%', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.03)', borderRadius: 8 }}>
+    <Card 
+      bordered={false} 
+      className="glass-card"
+      bodyStyle={{ padding: '24px' }} 
+      style={{ height: '100%', borderRadius: 12 }}
+    >
       <Statistic 
-        title={<span style={{ color: '#8c8c8c', fontSize: 14 }}>{title}</span>}
+        title={<span style={{ color: '#64748b', fontSize: 14, fontWeight: 500 }}>{title}</span>}
         value={value}
-        valueStyle={{ fontWeight: 600 }}
-        prefix={<span style={{ marginRight: 12, padding: 8, background: `${color}15`, borderRadius: 6, color: color }}>{icon}</span>}
+        valueStyle={{ fontWeight: 700, color: '#1e293b' }}
+        prefix={<span style={{ 
+          marginRight: 16, 
+          padding: '10px', 
+          background: `${color}15`, 
+          borderRadius: 10, 
+          color: color,
+          display: 'inline-flex',
+          boxShadow: `0 4px 10px ${color}20`
+        }}>{icon}</span>}
       />
     </Card>
   );
@@ -155,27 +169,28 @@ const CatalogManagement: React.FC = () => {
   return (
     <PageContainer
       header={{
-        title: '产品审核与登记',
-        subTitle: '独立管理产品的准入审核与 NDI 标识登记流程',
+        title: '产品治理工作台',
+        subTitle: '全生命周期数字产品审核与 NDI 标识登记',
         ghost: true,
       }}
       content={
-        <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col span={8}><StatCard title="待审核申请" value={12} icon={<AuditOutlined />} color="#faad14" /></Col>
-          <Col span={8}><StatCard title="今日已登记" value={5} icon={<FileProtectOutlined />} color="#52c41a" /></Col>
-          <Col span={8}><StatCard title="累计发布产品" value={128} icon={<CloudServerOutlined />} color="#1890ff" /></Col>
+        <Row gutter={20} style={{ marginBottom: 24 }}>
+          <Col span={8}><StatCard title="待审核申请" value={12} icon={<AuditOutlined style={{fontSize: 20}}/>} color="#f59e0b" /></Col>
+          <Col span={8}><StatCard title="今日已登记" value={5} icon={<FileProtectOutlined style={{fontSize: 20}}/>} color="#10b981" /></Col>
+          <Col span={8}><StatCard title="累计发布产品" value={128} icon={<CloudServerOutlined style={{fontSize: 20}}/>} color="#3b82f6" /></Col>
         </Row>
       }
     >
       <Tabs
         type="card"
         tabBarStyle={{ marginBottom: 24, borderBottom: 'none' }}
+        className="custom-tabs"
         items={[
           {
             key: 'audit',
-            label: `产品准入审核`,
+            label: `准入审核`,
             children: (
-              <div style={{ background: '#fff', padding: '0', borderRadius: 8, overflow: 'hidden', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.03)' }}>
+              <div className="glass-card" style={{ borderRadius: 12, overflow: 'hidden' }}>
                 <ProTable<CatalogItem>
                   {...commonTableProps}
                   columns={auditColumns}
@@ -189,16 +204,16 @@ const CatalogManagement: React.FC = () => {
                     }
                   }}
                   rowKey="id"
-                  headerTitle={<span style={{ fontWeight: 600, fontSize: 16 }}>待审核列表</span>}
+                  headerTitle={<span style={{ fontWeight: 600, fontSize: 16, color: '#334155' }}>待处理申请</span>}
                 />
               </div>
             ),
           },
           {
             key: 'register',
-            label: '产品标识登记',
+            label: '标识登记',
             children: (
-              <div style={{ background: '#fff', padding: '0', borderRadius: 8, overflow: 'hidden', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.03)' }}>
+              <div className="glass-card" style={{ borderRadius: 12, overflow: 'hidden' }}>
                 <ProTable<CatalogItem>
                   {...commonTableProps}
                   columns={registerColumns}
@@ -215,7 +230,7 @@ const CatalogManagement: React.FC = () => {
                     }
                   }}
                   rowKey="id"
-                  headerTitle={<span style={{ fontWeight: 600, fontSize: 16 }}>标识维护列表</span>}
+                  headerTitle={<span style={{ fontWeight: 600, fontSize: 16, color: '#334155' }}>产品标识库</span>}
                 />
               </div>
             ),

@@ -35,7 +35,7 @@ logs/
 *.out
 
 # Temporary files
-.gemini/
+.gemini/tmp/
 *.tmp
 *.bak
 *.swp

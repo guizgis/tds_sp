@@ -63,9 +63,11 @@ const OperatorLayout: React.FC = () => {
         collapsible 
         collapsed={collapsed} 
         onCollapse={setCollapsed} 
-        width={250}
+        width={260}
+        theme="dark"
+        className="sidebar-glass"
         style={{
-          boxShadow: '2px 0 8px 0 rgba(29,35,41,.05)',
+          boxShadow: '4px 0 10px 0 rgba(0,21,41,.08)',
           zIndex: 10,
         }}
       >
@@ -75,20 +77,23 @@ const OperatorLayout: React.FC = () => {
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center',
-          background: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: token.borderRadius,
-          backdropFilter: 'blur(4px)'
+          background: 'linear-gradient(135deg, rgba(24,144,255,0.8) 0%, rgba(0,80,179,0.8) 100%)',
+          borderRadius: 12,
+          boxShadow: '0 4px 12px rgba(24,144,255,0.2)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.1)'
         }}>
-          <SafetyCertificateOutlined style={{ fontSize: 24, marginRight: collapsed ? 0 : 12, color: '#1890ff' }} />
+          <SafetyCertificateOutlined style={{ fontSize: 26, marginRight: collapsed ? 0 : 12, color: '#fff' }} />
           {!collapsed && (
             <span style={{ 
-              fontSize: 18, 
-              fontWeight: 600, 
-              color: 'white', 
-              letterSpacing: 0.5,
+              fontSize: 19, 
+              fontWeight: 700, 
+              color: '#fff', 
+              letterSpacing: 1,
+              textShadow: '0 2px 4px rgba(0,0,0,0.1)',
               fontFamily: 'Inter, sans-serif'
             }}>
-              TDS 运营平台
+              TDS PRO
             </span>
           )}
         </div>
@@ -99,22 +104,25 @@ const OperatorLayout: React.FC = () => {
           defaultOpenKeys={['/catalog', '/contract']}
           items={menuItems}
           onClick={({ key }) => navigate(key)}
-          style={{ borderRight: 0 }}
+          style={{ borderRight: 0, padding: '8px', background: 'transparent' }}
         />
       </Sider>
-      <Layout style={{ background: token.colorBgLayout }}>
+      <Layout style={{ background: '#f1f5f9', minHeight: '100vh' }}>
         <Header style={{ 
-          background: token.colorBgContainer, 
+          background: 'rgba(255, 255, 255, 0.7)', 
           padding: '0 24px', 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'space-between',
-          boxShadow: '0 1px 4px rgba(0,21,41,.08)',
+          backdropFilter: 'blur(15px)',
+          WebkitBackdropFilter: 'blur(15px)',
+          boxShadow: '0 1px 4px rgba(0,21,41,.03)',
           height: 64,
           position: 'sticky',
           top: 0,
           zIndex: 9,
-          width: '100%'
+          width: '100%',
+          borderBottom: '1px solid rgba(0,0,0,0.05)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
              <Text strong style={{ fontSize: 16 }}>可信数据空间服务平台</Text>

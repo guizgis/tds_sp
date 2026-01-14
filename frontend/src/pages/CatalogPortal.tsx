@@ -60,73 +60,73 @@ const CatalogPortal: React.FC = () => {
     return (
       <Card
         hoverable
-        className="product-card"
-        style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid #f0f0f0', marginBottom: 16 }}
-        bodyStyle={{ padding: '16px' }}
+        className="glass-card"
+        style={{ borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}
+        bodyStyle={{ padding: '20px' }}
         actions={[
-          <Button key="detail" type="link" onClick={() => { setSelectedProduct(record); setDetailVisible(true); }}>
-            查看详情
+          <Button key="detail" type="text" onClick={() => { setSelectedProduct(record); setDetailVisible(true); }}>
+            详情
           </Button>,
           <Button 
             key="apply" 
             type="primary" 
             size="small" 
             icon={<ShoppingCartOutlined />} 
-            style={{ borderRadius: 4 }}
+            style={{ borderRadius: 6, boxShadow: '0 4px 10px rgba(0,80,179,0.2)' }}
             onClick={() => handleApply(record)}
           >
             申请使用
           </Button>,
         ]}
       >
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 16 }}>
           <Space align="start" style={{ width: '100%', justifyContent: 'space-between' }}>
-            <Title level={5} style={{ margin: 0, fontSize: 16 }} ellipsis={{ rows: 1 }}>
+            <Title level={5} style={{ margin: 0, fontSize: 17, fontWeight: 600 }} ellipsis={{ rows: 1 }}>
               {record.name}
             </Title>
-            <Tag color={origin === 'LOCAL' ? 'green' : 'blue'} style={{ margin: 0 }}>
-              {origin === 'LOCAL' ? '本空间' : '全网'}
+            <Tag color={origin === 'LOCAL' ? 'green' : 'blue'} bordered={false} style={{ borderRadius: 4 }}>
+              {origin === 'LOCAL' ? '本地' : '全网'}
             </Tag>
           </Space>
-          <div style={{ marginTop: 4 }}>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              <GlobalOutlined style={{ marginRight: 4 }} />
+          <div style={{ marginTop: 6 }}>
+            <Text type="secondary" style={{ fontSize: 12, display: 'flex', alignItems: 'center' }}>
+              <GlobalOutlined style={{ marginRight: 6, color: '#1890ff' }} />
               {record.providerName || record.providerId}
             </Text>
           </div>
         </div>
 
-        <Paragraph ellipsis={{ rows: 2 }} type="secondary" style={{ fontSize: 13, height: 40, marginBottom: 16 }}>
+        <Paragraph ellipsis={{ rows: 2 }} type="secondary" style={{ fontSize: 13, height: 40, marginBottom: 20, lineHeight: '1.6' }}>
           {record.description}
         </Paragraph>
 
-        <div style={{ background: '#fafafa', padding: '12px', borderRadius: 6 }}>
-          <Row gutter={[8, 8]}>
+        <div style={{ background: 'rgba(0, 0, 0, 0.02)', padding: '14px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.03)' }}>
+          <Row gutter={[12, 12]}>
             <Col span={12}>
               <Space direction="vertical" size={0}>
-                <Text type="secondary" style={{ fontSize: 11 }}>主题分类</Text>
-                <Text strong style={{ fontSize: 12 }}>{record.topicCategory === 'B0000' ? '经济管理' : (record.topicCategory === 'A0000' ? '综合政务' : '科技教育')}</Text>
+                <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>主题分类</Text>
+                <Text strong style={{ fontSize: 13 }}>{record.topicCategory === 'B0000' ? '经济管理' : (record.topicCategory === 'A0000' ? '综合政务' : '科技教育')}</Text>
               </Space>
             </Col>
             <Col span={12}>
               <Space direction="vertical" size={0}>
-                <Text type="secondary" style={{ fontSize: 11 }}>安全级别</Text>
-                <Badge status={record.securityLevel === '003' ? 'warning' : 'processing'} text={`L${record.securityLevel || '2'}`} />
+                <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>安全级别</Text>
+                <Badge status={record.securityLevel === '003' ? 'warning' : 'processing'} text={<Text strong style={{ fontSize: 13 }}>{`L${record.securityLevel || '2'}`}</Text>} />
               </Space>
             </Col>
             <Col span={12}>
               <Space direction="vertical" size={0}>
-                <Text type="secondary" style={{ fontSize: 11 }}>交付形式</Text>
+                <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>交付形式</Text>
                 <Space size={4}>
                   <DatabaseOutlined style={{ fontSize: 12, color: '#1890ff' }} />
-                  <Text style={{ fontSize: 12 }}>{record.deliveryMode === '002' ? 'API产品' : '数据集'}</Text>
+                  <Text strong style={{ fontSize: 13 }}>{record.deliveryMode === '002' ? 'API产品' : '数据集'}</Text>
                 </Space>
               </Space>
             </Col>
             <Col span={12}>
               <Space direction="vertical" size={0}>
-                <Text type="secondary" style={{ fontSize: 11 }}>更新频率</Text>
-                <Text style={{ fontSize: 12 }}>{record.updateFrequency || '每日'}</Text>
+                <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>更新频率</Text>
+                <Text strong style={{ fontSize: 13 }}>{record.updateFrequency || '每日'}</Text>
               </Space>
             </Col>
           </Row>
@@ -167,8 +167,10 @@ const CatalogPortal: React.FC = () => {
           defaultCollapsed: false,
           span: 6,
           labelWidth: 80,
+          className: 'glass-card',
+          style: { padding: '24px', borderRadius: 12, marginBottom: 24, background: 'rgba(255,255,255,0.4)' }
         }}
-        grid={viewType === 'card' ? { gutter: 16, column: 3 } : undefined}
+        grid={viewType === 'card' ? { gutter: 24, column: 3 } : undefined}
         request={async (params) => {
           const res = await catalogApi.search({ 
             ...params, 
