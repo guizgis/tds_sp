@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, message, Modal, Typography, Divider, Form } from 'antd';
-import { PlusOutlined, FileTextOutlined, SafetyCertificateOutlined, CloudUploadOutlined } from '@ant-design/icons';
+import { Button, message, Modal, Typography, Divider, Form, Tag } from 'antd';
+import { PlusOutlined, SafetyCertificateOutlined, CloudUploadOutlined } from '@ant-design/icons';
 import { 
   ProTable, 
   PageContainer, 
@@ -77,12 +77,15 @@ const Contracts: React.FC = () => {
       title: '合约名称',
       dataIndex: 'contractName',
       copyable: true,
-      tip: '数字合约的正式名称',
+      ellipsis: true,
+      formItemProps: {
+        rules: [{ required: true, message: '此项为必填项' }],
+      },
     },
     {
       title: '合约标识码',
       dataIndex: 'contractId',
-      width: 280,
+      width: 240,
       search: false,
       render: (id) => <code style={{ color: '#0050b3', fontSize: '12px' }}>{id}</code>,
     },
@@ -90,9 +93,10 @@ const Contracts: React.FC = () => {
       title: '状态',
       dataIndex: 'contractStatus',
       valueType: 'select',
+      width: 100,
       valueEnum: {
         '01': { text: '已发起', status: 'Processing' },
-        '02': { text: '协商中', status: 'Processing' },
+        '02': { text: '协商中', status: 'Warning' },
         '0301': { text: '签署成功', status: 'Success' },
         '05': { text: '履行中', status: 'Success' },
         '06': { text: '已终止', status: 'Error' },
@@ -101,6 +105,8 @@ const Contracts: React.FC = () => {
     {
       title: '备案状态',
       dataIndex: 'filingStatus',
+      width: 100,
+      search: false,
       valueEnum: {
         'UNFILED': { text: '未备案', status: 'Default' },
         'FILED': { text: '已备案', status: 'Success' },
@@ -109,24 +115,33 @@ const Contracts: React.FC = () => {
     {
       title: '签署模式',
       dataIndex: 'signMode',
+      width: 120,
+      search: false,
       valueEnum: {
         '01': { text: '点对点' },
         '02': { text: '平台参与' },
       },
     },
     {
+      title: '发起方',
+      dataIndex: 'issuerId',
+      ellipsis: true,
+      search: false,
+    },
+    {
       title: '操作',
       valueType: 'option',
-      key: 'option',
+      width: 180,
+      fixed: 'right',
       render: (_, record) => {
         const actions = [
-          <a key="view" onClick={() => { setSelectedContract(record); setIsDetailVisible(true); }}>详情</a>,
+          <Button key="view" type="link" size="small" onClick={() => { setSelectedContract(record); setIsDetailVisible(true); }}>详情</Button>,
         ];
         if (record.contractStatus === '0301' && record.filingStatus !== 'FILED') {
-          actions.push(<a key="file" onClick={() => handleFile(record.contractId)}><CloudUploadOutlined /> 备案</a>);
+          actions.push(<Button key="file" type="primary" ghost size="small" onClick={() => handleFile(record.contractId)}><CloudUploadOutlined /> 备案</Button>);
         }
         if (record.contractStatus !== '06') {
-          actions.push(<a key="terminate" style={{ color: '#ff4d4f' }}>解除</a>);
+          actions.push(<Button key="terminate" type="text" danger size="small">解除</Button>);
         }
         return actions;
       },
@@ -182,9 +197,6 @@ const Contracts: React.FC = () => {
         policySnapshot: policySnapshot
       };
       
-      // Need to cast to any because createContract signature in api might be strict but we updated backend
-      // Actually I should update api/contract.ts ContractCreateRequest interface too.
-      // But for now, let's cast or rely on JS.
       const res = await contractApi.createContract(request as any);
       
       if (res.data.status === '0') {
@@ -214,7 +226,8 @@ const Contracts: React.FC = () => {
         headerTitle="数字合约列表"
         dataSource={MOCK_DATA} 
         rowKey="contractId"
-        search={{ labelWidth: 'auto' }}
+        options={{ density: true, fullScreen: true, setting: true }}
+        search={{ filterType: 'query', span: 6, labelWidth: 'auto' }}
         toolBarRender={() => [
           <Button key="button" icon={<PlusOutlined />} type="primary" onClick={() => setIsModalVisible(true)}>
             发起新合约

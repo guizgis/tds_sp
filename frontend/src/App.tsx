@@ -23,9 +23,24 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 const tdsTheme = {
   token: {
-    colorPrimary: '#0050b3',
+    colorPrimary: '#0050B3',
     borderRadius: 6,
+    wireframe: false,
+    colorBgLayout: '#F5F7FA',
   },
+  components: {
+    Layout: {
+      headerBg: '#FFFFFF',
+      siderBg: '#001529',
+    },
+    Card: {
+      headerFontSize: 16,
+    },
+    Table: {
+      headerBg: '#FAFAFA',
+      rowHoverBg: '#F0F5FF',
+    }
+  }
 };
 
 const App: React.FC = () => {

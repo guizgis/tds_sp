@@ -1,71 +1,98 @@
-# UI Technical Design
+# UI Technical Design 2.0 (Pro Max)
 
 ## Context
-To achieve rapid, high-quality frontend development, we utilize **Ant Design ProComponents**. This design document provides the configuration "schema" for all UI implementations.
+This document defines the **Design System 2.0** for the Trusted Data Space Service Platform. It supersedes previous versions and mandates strict adherence to **Ant Design 5.0** tokens and ProComponents best practices. The goal is to build a "Trustworthy, Efficient, and Professional" interface.
 
-## Implementation Standards
+## 1. Design Tokens (Global Theme)
 
-### 1. Global Theme Configuration (ConfigProvider)
-All components are wrapped in a `ConfigProvider` with the following `token` and `components` schema:
+All UI components must derive their styles from the following global tokens. Do not hardcode hex values in components; use the `theme` object or CSS variables.
+
+### 1.1 Color Palette
+We use a **Deep Ocean Blue** primary scheme to convey stability and trust.
+
+| Token | Value | Semantic Usage |
+| :--- | :--- | :--- |
+| `colorPrimary` | `#0050B3` | Primary buttons, active states, links |
+| `colorSuccess` | `#52C41A` | "Active", "Approved", "Filed" statuses |
+| `colorWarning` | `#FAAD14` | "Pending", "Negotiating" statuses |
+| `colorError` | `#FF4D4F` | "Rejected", "Terminated", "Revoked" statuses |
+| `colorInfo` | `#1890FF` | Information alerts, standard tags |
+| `colorBgLayout` | `#F5F7FA` | App background (slightly cool grey) |
+| `colorTextBase` | `#1F1F1F` | Primary text |
+| `colorTextSecondary` | `#595959` | Descriptions, labels |
+
+### 1.2 Typography
+- **Font Family**: `Inter`, `-apple-system`, `BlinkMacSystemFont`, `'Segoe UI'`, `'PingFang SC'`, `'Hiragino Sans GB'`, `'Microsoft YaHei'`, `sans-serif`.
+- **Base Size**: `14px`.
+- **Heading Scale**:
+    - H1: `24px` (Page Titles)
+    - H2: `20px` (Section Headers)
+    - H3: `16px` (Card Titles)
+
+### 1.3 Shape & Spacing
+- **Border Radius**: `6px` (Modern, soft but professional).
+- **Base Unit**: `4px`. All margins and paddings should be multiples of 4 (e.g., 8px, 16px, 24px).
+
+## 2. Component Protocols
+
+### 2.1 ProTable (The Data Grid)
+- **Style**:
+    - `cardBordered={true}`
+    - `options={{ density: true, fullScreen: true, setting: true }}`
+    - `search={{ filterType: 'query', span: 6, labelWidth: 'auto' }}`
+- **Columns**:
+    - **Status Columns**: MUST use `valueEnum` with standard status mapping.
+    - **Action Columns**: Fixed to the right, using `Button type="link"` or `Button type="text"` for secondary actions. Primary action can be a ghost button.
+
+### 2.2 Modal & Drawer (The Workspaces)
+- **Modals**:
+    - Use `width={800}` for standard forms.
+    - Use `destroyOnClose={true}`.
+    - Footer: Standard "Cancel" (Default) and "Submit" (Primary) buttons.
+- **Drawers**:
+    - Use for viewing details (read-only).
+    - `width={600}` or `width="60%"`.
+
+### 2.3 Cards (The Content Containers)
+- **Product Card**:
+    - `hoverable={true}`.
+    - `bodyStyle={{ padding: '16px' }}`.
+    - Shadow: `box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08)` on hover.
+
+## 3. Implementation Code Snippet (ConfigProvider)
 
 ```typescript
 const tdsTheme = {
   token: {
-    colorPrimary: '#0050b3', // Trust Blue
+    colorPrimary: '#0050B3',
     borderRadius: 6,
-    colorLink: '#096dd9',
-    fontFamily: 'Inter, -apple-system, system-ui',
+    wireframe: false,
+    colorBgLayout: '#F5F7FA',
   },
   components: {
-    Layout: { headerBg: '#ffffff' },
-    Menu: { itemSelectedBg: '#0050b3' }
+    Layout: {
+      headerBg: '#FFFFFF',
+      siderBg: '#001529',
+    },
+    Card: {
+      headerFontSize: 16,
+    },
+    Table: {
+      headerBg: '#FAFAFA',
+      rowHoverBg: '#F0F5FF',
+    }
   }
 };
 ```
 
-### 2. ProTable Component Protocol
-Every data table implementation MUST follow this attribute structure:
+## 4. Status Mapping Standard
 
-| Prop | Requirement | Purpose |
+| Internal Code | Chinese Label | Color (Status) |
 | :--- | :--- | :--- |
-| `cardBordered` | Always `true` | Standard card styling |
-| `search` | `{ labelWidth: 'auto' }` | Standardized search bar layout |
-| `pagination` | `{ pageSize: 5/10/20 }` | Consistent paging |
-| `dateFormatter` | `"string"` | Simplified date handling |
-| `actionRef` | Required | For programmatic reloads after audit actions |
-
-### 3. ProForm & StepsForm Protocol
-- **StepsForm**: MUST be used for creation workflows requiring > 5 fields.
-- **ProFormText/Select**: MUST use the `rules={[{ required: true }]}` pattern for mandatory metadata.
-
-### 4. Semantic Status Mapping (ProColumns ValueEnum)
-All status columns MUST use the following unified `valueEnum` mapping:
-
-```typescript
-const statusEnum = {
-  PENDING: { text: '待审核', status: 'Processing' },
-  ACTIVE: { text: '已生效', status: 'Success' },
-  CANCELLED: { text: '已注销', status: 'Error' },
-  REJECTED: { text: '已拒绝', status: 'Error' },
-};
-```
-
-## UI Structure Blueprint (Pseudo-YAML Representation)
-
-```yaml
-ui_standard_version: "1.0"
-layout:
-  type: ProLayout
-  header: StandardHeader
-  sidebar: SiderMenu (width: 220px)
-components:
-  table:
-    library: @ant-design/pro-components/ProTable
-    defaults: { size: middle, bordered: true }
-  form:
-    library: @ant-design/pro-components/ProForm
-    defaults: { layout: vertical }
-  feedback:
-    success: antd.message.success
-    error: antd.message.error
-```
+| `PENDING` / `01` / `待审核` | 待审核 | `processing` (Blue) |
+| `AUDITED` / `02` / `审核通过` | 审核通过 | `warning` (Orange) |
+| `REGISTERED` / `0301` / `已登记` | 已登记 | `success` (Green) |
+| `ACTIVE` / `05` / `已发布` | 已发布 | `success` (Green) |
+| `REJECTED` / `已驳回` | 已驳回 | `error` (Red) |
+| `UNFILED` | 未备案 | `default` (Grey) |
+| `FILED` | 已备案 | `success` (Green) |
