@@ -12,6 +12,10 @@ public class ContractStrategyEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // NDI Standard 6.2.2.1: Permission, Prohibition, Obligation
+    @Column(nullable = false)
+    private String policyType; 
+
     private String dataProductId;
     private String dataProductName;
 
@@ -35,6 +39,8 @@ public class ContractStrategyEntity {
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    public String getPolicyType() { return policyType; }
+    public void setPolicyType(String policyType) { this.policyType = policyType; }
     public String getDataProductId() { return dataProductId; }
     public void setDataProductId(String dataProductId) { this.dataProductId = dataProductId; }
     public String getDataProductName() { return dataProductName; }

@@ -39,7 +39,7 @@ public class ContractService {
     @Transactional
     public String createContract(String name, String summary, LocalDateTime activationTime, 
                                 LocalDateTime endTime, String signMode, String issuerId, 
-                                String issuerEntityId, String signature) {
+                                String issuerEntityId, String signature, String policySnapshot) {
         
         // 4.6 Signature Verification (Mock)
         if (!verifySignature(issuerId, signature)) {
@@ -61,6 +61,8 @@ public class ContractService {
         entity.setIssuerId(issuerId);
         entity.setIssuerEntityId(issuerEntityId);
         entity.setSignature(signature);
+        entity.setPolicySnapshot(policySnapshot);
+        entity.setFilingStatus("UNFILED");
         
         contractRepository.save(entity);
         return contractId;
@@ -77,6 +79,18 @@ public class ContractService {
         // 简单处理：更新或添加策略
         entity.getStrategies().add(strategy);
         
+        contractRepository.save(entity);
+        return true;
+    }
+
+    @Transactional
+    public boolean fileContract(String contractId) {
+        Optional<ContractEntity> optional = contractRepository.findById(contractId);
+        if (optional.isEmpty()) return false;
+
+        ContractEntity entity = optional.get();
+        // Assuming filing can happen after signing (0301)
+        entity.setFilingStatus("FILED");
         contractRepository.save(entity);
         return true;
     }

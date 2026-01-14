@@ -16,6 +16,7 @@ import CatalogManagement from './pages/CatalogManagement';
 import Contracts from './pages/Contracts';
 import SpaceManagement from './pages/SpaceManagement';
 import ConnectorManagement from './pages/ConnectorManagement';
+import PolicyTemplateManagement from './pages/PolicyTemplateManagement';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -49,7 +50,9 @@ const App: React.FC = () => {
           <Route path="catalog/portal" element={<CatalogPortal />} />
           <Route path="catalog/applications" element={<UsageApplications />} />
           <Route path="space" element={<SpaceManagement />} />
-          <Route path="/contract" element={<Contracts />} />
+          <Route path="/contract" element={<Navigate to="/contract/list" replace />} />
+          <Route path="/contract/list" element={<Contracts />} />
+          <Route path="/contract/templates" element={<PolicyTemplateManagement />} />
           <Route path="/settings" element={<div>系统全局配置开发中...</div>} />
         </Route>
 

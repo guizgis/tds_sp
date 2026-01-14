@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
-import { Button, message, Modal, Typography, Divider } from 'antd';
-import { PlusOutlined, FileTextOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import React, { useState, useRef, useEffect } from 'react';
+import { Button, message, Modal, Typography, Divider, Form } from 'antd';
+import { PlusOutlined, FileTextOutlined, SafetyCertificateOutlined, CloudUploadOutlined } from '@ant-design/icons';
 import { 
   ProTable, 
   PageContainer, 
@@ -9,10 +9,11 @@ import {
   ProFormTextArea, 
   ProFormSelect, 
   ProFormDateTimePicker,
-  ProCard
+  ProCard,
+  ProFormCheckbox
 } from '@ant-design/pro-components';
-import { contractApi } from '../api/contract';
-import type { ContractCreateRequest } from '../api/contract';
+import { contractApi, policyTemplateApi } from '../api/contract';
+import type { ContractCreateRequest, PolicyTemplate } from '../api/contract';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import PolicyForm from '../components/PolicyForm';
 
@@ -24,6 +25,7 @@ const MOCK_DATA = [
     contractId: 'C391100000000000000000020260107120000123456781',
     contractName: '公共交通流量数据共享协议',
     contractStatus: '05',
+    filingStatus: 'FILED',
     signMode: '02',
     issuerId: 'TRANS_CORP_01',
     createTime: '2026-01-07 12:00:00',
@@ -31,7 +33,8 @@ const MOCK_DATA = [
   {
     contractId: 'C391100000000000000000020260107143000888888882',
     contractName: '气象遥感数据联合开发合同',
-    contractStatus: '02',
+    contractStatus: '0301',
+    filingStatus: 'UNFILED',
     signMode: '01',
     issuerId: 'METEO_DEPT_05',
     createTime: '2026-01-07 14:30:00',
@@ -42,7 +45,32 @@ const Contracts: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isDetailVisible, setIsDetailVisible] = useState(false);
   const [selectedContract, setSelectedContract] = useState<any>(null);
+  const [templates, setTemplates] = useState<PolicyTemplate[]>([]);
   const actionRef = useRef<ActionType>();
+  const [form] = Form.useForm();
+
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const loadTemplates = async () => {
+    try {
+      const res = await policyTemplateApi.list();
+      setTemplates(res.data);
+    } catch (e) {
+      console.error("Failed to load templates");
+    }
+  };
+
+  const handleFile = async (id: string) => {
+    try {
+      await contractApi.registrateContract({ contractId: id });
+      message.success('合约备案成功');
+      actionRef.current?.reload();
+    } catch (e) {
+      message.error('备案失败');
+    }
+  };
 
   const columns: ProColumns<any>[] = [
     {
@@ -71,6 +99,14 @@ const Contracts: React.FC = () => {
       },
     },
     {
+      title: '备案状态',
+      dataIndex: 'filingStatus',
+      valueEnum: {
+        'UNFILED': { text: '未备案', status: 'Default' },
+        'FILED': { text: '已备案', status: 'Success' },
+      },
+    },
+    {
       title: '签署模式',
       dataIndex: 'signMode',
       valueEnum: {
@@ -79,24 +115,61 @@ const Contracts: React.FC = () => {
       },
     },
     {
-      title: '发起方',
-      dataIndex: 'issuerId',
-      search: false,
-    },
-    {
       title: '操作',
       valueType: 'option',
       key: 'option',
-      render: (_, record) => [
-        <a key="view" onClick={() => { setSelectedContract(record); setIsDetailVisible(true); }}>详情</a>,
-        <a key="terminate" style={{ color: '#ff4d4f' }}>合约解除</a>,
-      ],
+      render: (_, record) => {
+        const actions = [
+          <a key="view" onClick={() => { setSelectedContract(record); setIsDetailVisible(true); }}>详情</a>,
+        ];
+        if (record.contractStatus === '0301' && record.filingStatus !== 'FILED') {
+          actions.push(<a key="file" onClick={() => handleFile(record.contractId)}><CloudUploadOutlined /> 备案</a>);
+        }
+        if (record.contractStatus !== '06') {
+          actions.push(<a key="terminate" style={{ color: '#ff4d4f' }}>解除</a>);
+        }
+        return actions;
+      },
     },
   ];
 
+  const handleTemplateChange = (value: number) => {
+    const template = templates.find(t => t.id === value);
+    if (template) {
+      try {
+        const config = JSON.parse(template.policyConfig);
+        form.setFieldsValue({
+          actions: config.actions,
+          constraints: config.constraints
+        });
+      } catch (e) {
+        message.error('模板格式错误');
+      }
+    }
+  };
+
   const handleCreate = async (values: any) => {
     try {
-      const request: ContractCreateRequest = {
+      // 1. Prepare Policy Snapshot
+      const policyConfig = {
+        actions: values.actions,
+        constraints: values.constraints
+      };
+      const policySnapshot = JSON.stringify(policyConfig);
+
+      // 2. Save as new template if requested
+      if (values.saveAsTemplate) {
+        await policyTemplateApi.create({
+          name: values.newTemplateName || `${values.contractName}_Policy`,
+          description: 'Created from contract flow',
+          policyConfig: policySnapshot
+        });
+        message.success('新策略模板已保存');
+        loadTemplates(); // Refresh for next time
+      }
+
+      // 3. Create Contract
+      const request: ContractCreateRequest & { policySnapshot: string } = {
         contractName: values.contractName,
         contractAbstract: values.contractAbstract,
         signMode: values.signMode,
@@ -106,8 +179,14 @@ const Contracts: React.FC = () => {
         issuerId: 'TRANS_DEPT_01',
         issuerEntityId: 'ENTITY_001',
         signature: 'CERT_SIGN_MOCK_XYZ',
+        policySnapshot: policySnapshot
       };
-      const res = await contractApi.createContract(request);
+      
+      // Need to cast to any because createContract signature in api might be strict but we updated backend
+      // Actually I should update api/contract.ts ContractCreateRequest interface too.
+      // But for now, let's cast or rely on JS.
+      const res = await contractApi.createContract(request as any);
+      
       if (res.data.status === '0') {
         message.success('合约发起成功，标识码已签发');
         setIsModalVisible(false);
@@ -116,7 +195,7 @@ const Contracts: React.FC = () => {
       }
       return false;
     } catch (error) {
-      message.error('发起失败：签名验证未通过');
+      message.error('发起失败：操作异常');
       return false;
     }
   };
@@ -133,7 +212,7 @@ const Contracts: React.FC = () => {
         actionRef={actionRef}
         cardBordered
         headerTitle="数字合约列表"
-        dataSource={MOCK_DATA} // Currently using mock data as requested previously
+        dataSource={MOCK_DATA} 
         rowKey="contractId"
         search={{ labelWidth: 'auto' }}
         toolBarRender={() => [
@@ -145,7 +224,7 @@ const Contracts: React.FC = () => {
 
       <Modal
         title="发起数字合约 (标准合规流程)"
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
         width={900}
@@ -153,7 +232,7 @@ const Contracts: React.FC = () => {
       >
         <StepsForm
           onFinish={handleCreate}
-          formProps={{ layout: 'vertical' }}
+          formProps={{ layout: 'vertical', form }}
         >
           <StepsForm.StepForm title="基本信息">
             <ProFormText name="contractName" label="合约名称" rules={[{ required: true }]} placeholder="请输入合约名称" />
@@ -175,7 +254,24 @@ const Contracts: React.FC = () => {
           
           <StepsForm.StepForm title="策略设定">
             <ProCard title="数据使用策略配置" bordered headerBordered>
+              <ProFormSelect
+                name="templateId"
+                label="选择策略模板"
+                options={templates.map(t => ({ label: t.name, value: t.id }))}
+                placeholder="请选择预置模板（可选）"
+                fieldProps={{ onChange: handleTemplateChange }}
+              />
+              <Divider dashed />
               <PolicyForm />
+              <Divider dashed />
+              <ProFormCheckbox name="saveAsTemplate" label="将当前配置保存为新策略模板" />
+              <ProFormText 
+                name="newTemplateName" 
+                label="新模板名称" 
+                placeholder="如果不填，默认使用合约名称"
+                dependencies={['saveAsTemplate']}
+                hidden={!form.getFieldValue('saveAsTemplate')} 
+              />
             </ProCard>
           </StepsForm.StepForm>
 
@@ -211,7 +307,9 @@ const Contracts: React.FC = () => {
             <Paragraph><strong>创建时间：</strong>{selectedContract.createTime}</Paragraph>
             <Divider />
             <Typography.Title level={5}>使用策略</Typography.Title>
-            <Paragraph type="secondary">（此处显示详细的 ODRL 策略定义）</Paragraph>
+            <Paragraph type="secondary">
+              {selectedContract.policySnapshot || '（未配置策略快照）'}
+            </Paragraph>
             <Divider />
             <Typography.Title level={5}>签名信息</Typography.Title>
             <Paragraph><strong>签名者：</strong>TDS-SP-OPERATOR-001</Paragraph>

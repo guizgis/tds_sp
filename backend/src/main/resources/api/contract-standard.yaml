@@ -1,0 +1,517 @@
+openapi: 3.0.3
+info:
+  title: Trustworthy Data Space Digital Contract API
+  description: API based on TC609-6-2025-14 Digital Contract Technical Requirements
+  version: 1.0.0
+servers:
+  - url: /api/v1/contract
+tags:
+  - name: Contract Lifecycle
+    description: Creation, Negotiation, Registration, Termination
+  - name: Contract Template
+    description: Template Management
+  - name: Contract Execution
+    description: Execution Reporting and Monitoring
+
+paths:
+  /contractTemplate:
+    post:
+      tags:
+        - Contract Template
+      summary: Get contract templates
+      operationId: getContractTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateRequest'
+      responses:
+        '200':
+          description: Template list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateResponse'
+
+  /contractCreate:
+    post:
+      tags:
+        - Contract Lifecycle
+      summary: Initiate a digital contract
+      operationId: createContract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractCreateRequest'
+      responses:
+        '200':
+          description: Contract created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractCreateResponse'
+
+  /contractNegotiate:
+    post:
+      tags:
+        - Contract Lifecycle
+      summary: Negotiate contract terms
+      operationId: negotiateContract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractNegotiateRequest'
+      responses:
+        '200':
+          description: Negotiation status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractNegotiateResponse'
+
+  /contractRegistrate:
+    post:
+      tags:
+        - Contract Lifecycle
+      summary: File/Register a signed contract
+      operationId: registrateContract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractRegistrateRequest'
+      responses:
+        '200':
+          description: Registration status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractRegistrateResponse'
+
+  /contractExecution:
+    post:
+      tags:
+        - Contract Execution
+      summary: Report contract execution status
+      operationId: reportExecution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractExecutionRequest'
+      responses:
+        '200':
+          description: Reporting status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+
+  /contractTerminate:
+    post:
+      tags:
+        - Contract Lifecycle
+      summary: Terminate a contract
+      operationId: terminateContract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractTerminateRequest'
+      responses:
+        '200':
+          description: Termination status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+
+  /policy-templates:
+    get:
+      tags:
+        - Contract Template
+      summary: List custom policy templates (Internal API)
+      operationId: listPolicyTemplates
+      responses:
+        '200':
+          description: List of policy templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PolicyTemplate'
+    post:
+      tags:
+        - Contract Template
+      summary: Create a custom policy template (Internal API)
+      operationId: createPolicyTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyTemplate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyTemplate'
+
+  /policy-templates/{id}:
+    put:
+      tags:
+        - Contract Template
+      summary: Update a custom policy template (Internal API)
+      operationId: updatePolicyTemplate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyTemplate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyTemplate'
+    delete:
+      tags:
+        - Contract Template
+      summary: Delete a custom policy template (Internal API)
+      operationId: deletePolicyTemplate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Deleted
+
+components:
+  schemas:
+    # B.2.1 Template Interface
+    TemplateRequest:
+      type: object
+      required:
+        - issuerId
+        - issuerEntityId
+      properties:
+        templateId:
+          type: string
+          maxLength: 36
+        issuerId:
+          type: string
+        issuerEntityId:
+          type: string
+
+    TemplateResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: 0:Success, 1:Failed
+        template:
+          type: string # JSON string of template content
+
+    # B.2.2 Create Interface
+    ContractCreateRequest:
+      type: object
+      required:
+        - contractName
+        - contractAbstract
+        - issueTime
+        - activationTime
+        - endTime
+        - signMode
+        - issuerId
+        - issuerEntityId
+        - signature
+      properties:
+        contractName:
+          type: string
+          maxLength: 128
+        contractAbstract:
+          type: string
+          maxLength: 1024
+        issueTime:
+          type: string # ISO8601
+        activationTime:
+          type: string # ISO8601
+        endTime:
+          type: string # ISO8601
+        signMode:
+          type: string
+          enum: ['01', '02']
+          description: 01:P2P, 02:Platform
+        issuerId:
+          type: string
+        issuerEntityId:
+          type: string
+        signature:
+          type: string
+        # Additional fields for convenience (not in standard request but useful for internal logic)
+        policySnapshot:
+          type: string # JSON string of initial policy
+
+    ContractCreateResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            contractId:
+              type: string
+              maxLength: 47
+
+    # B.2.3 Negotiate Interface
+    ContractNegotiateRequest:
+      type: object
+      required:
+        - contractName
+        - contractId
+        - strategy
+        - actions
+      properties:
+        contractName:
+          type: string
+          maxLength: 128
+        contractId:
+          type: string
+          maxLength: 47
+        strategy:
+          $ref: '#/components/schemas/ContractStrategy'
+        signatureList:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContractSignature'
+
+    ContractNegotiateResponse:
+      type: object
+      properties:
+        negotiationStatus:
+          type: string
+          description: 0:Success, 1:Failed
+
+    # B.2.4 Registrate (File) Interface
+    ContractRegistrateRequest:
+      type: object
+      required:
+        - contractName
+        - contractId
+        - strategy
+        - signatoryEntities
+        - signatoryTime
+        - expansionItem
+      properties:
+        contractName:
+          type: string
+        contractId:
+          type: string
+        strategy:
+          $ref: '#/components/schemas/ContractStrategy'
+        signatoryEntities:
+          type: array
+          items:
+            $ref: '#/components/schemas/SignatoryEntity'
+        signatoryTime:
+          type: string
+        expansionItem:
+          type: string
+
+    ContractRegistrateResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            contractHash:
+              type: string
+
+    # B.2.5 Execution Interface
+    ContractExecutionRequest:
+      type: object
+      required:
+        - contractName
+        - contractId
+        - strategy
+        - executedStrategy
+        - reportTime
+      properties:
+        contractName:
+          type: string
+        contractId:
+          type: string
+        strategy:
+          $ref: '#/components/schemas/ContractStrategy'
+        executedStrategy:
+          type: object
+          properties:
+            executedStrategyId:
+              type: string
+            executedActions:
+              type: array
+              items:
+                type: string
+            executionResult:
+              type: string
+            executionDetails:
+              type: string
+        reportTime:
+          type: string
+
+    # B.2.6 Terminate Interface
+    ContractTerminateRequest:
+      type: object
+      required:
+        - contractName
+        - contractId
+        - issueTime
+        - terminateType
+        - activationTime
+        - scheduledEndTime
+        - issuerId
+        - issuerEntityId
+        - signature
+      properties:
+        contractName:
+          type: string
+        contractId:
+          type: string
+        issueTime:
+          type: string
+        terminateType:
+          type: string
+          enum: ['01', '02']
+          description: 01:Early, 02:Expired
+        activationTime:
+          type: string
+        scheduledEndTime:
+          type: string
+        agreedEndTime:
+          type: string
+        issuerId:
+          type: string
+        issuerEntityId:
+          type: string
+        signature:
+          type: string
+
+    # Common Models
+    BaseResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: 0:Success, 1:Failed
+
+    ContractStrategy:
+      type: object
+      description: Structure based on 6.2.2.1
+      properties:
+        policyType:
+          type: string
+          enum: ['permission', 'prohibition', 'obligation']
+        subjectInfo:
+          type: object
+          properties:
+            dataProductId:
+              type: string
+            dataProductName:
+              type: string
+        executionNodeInfo:
+          type: object
+          properties:
+            providerNodeId:
+              type: string
+            providerNodeName:
+              type: string
+            consumerNodeId:
+              type: string
+            consumerNodeName:
+              type: string
+        actions:
+          type: array
+          items:
+            type: string
+            # enum: [access, read, download, reproduce, storage, process, compute, jointDevelop, distribute, grantUse, policyTransmit, delivery, sell, logRecordSend, delete, alert, compensate, desensitize, anonymize, transform]
+        constraints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Constraint'
+        policyExpansion:
+          type: string
+
+    Constraint:
+      type: object
+      required:
+        - constraintName
+        - constraintOperator
+        - constraintValue
+      properties:
+        constraintName:
+          type: string
+          # enum: [time, timeWindow, region, networkAddress, physicalAddress, count, frequency, dataSize, dataRecord, dataField, valueExpression, application, algorithm, machineLearningModels, executionEnv, encryptMode, deliveryMethod, payAmount]
+        constraintOperator:
+          type: string
+          description: Standard codes 01-12 or short names eq, gt...
+          # enum: [eq, gt, gteq, hasPart, isA, isAllOf, isAnyOf, isNoneOf, isPartOf, lt, lteq, neq]
+        constraintValue:
+          type: string
+
+    ContractSignature:
+      type: object
+      properties:
+        entityId:
+          type: string
+        signature:
+          type: string
+        signatoryTime:
+          type: string
+
+    SignatoryEntity:
+      type: object
+      properties:
+        signatoryEntityId:
+          type: string
+        signatoryEntityName:
+          type: string
+        signature:
+          type: string
+
+    # Internal Model for Policy Templates
+    PolicyTemplate:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        policyConfig:
+          type: string # JSON representation of ContractStrategy
+        createTime:
+          type: string
+          format: date-time

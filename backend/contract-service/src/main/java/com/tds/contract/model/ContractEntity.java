@@ -35,6 +35,11 @@ public class ContractEntity {
     @Column(columnDefinition = "TEXT")
     private String signature;
 
+    private String filingStatus; // UNFILED, FILED
+    
+    @Column(columnDefinition = "TEXT")
+    private String policySnapshot; // JSON snapshot of the policy at signing time
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "contract_id")
     private List<ContractStrategyEntity> strategies = new ArrayList<>();
@@ -44,6 +49,10 @@ public class ContractEntity {
     private List<SignatoryEntity> signatories = new ArrayList<>();
 
     // Getters and Setters
+    public String getFilingStatus() { return filingStatus; }
+    public void setFilingStatus(String filingStatus) { this.filingStatus = filingStatus; }
+    public String getPolicySnapshot() { return policySnapshot; }
+    public void setPolicySnapshot(String policySnapshot) { this.policySnapshot = policySnapshot; }
     public String getContractId() { return contractId; }
     public void setContractId(String contractId) { this.contractId = contractId; }
     public String getContractName() { return contractName; }

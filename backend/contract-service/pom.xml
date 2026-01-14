@@ -120,7 +120,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/../src/main/resources/api/contract-api.yaml</inputSpec>
+                            <inputSpec>${project.basedir}/../src/main/resources/api/contract-standard.yaml</inputSpec>
                             <generatorName>spring</generatorName>
                             <apiPackage>com.tds.contract.api</apiPackage>
                             <modelPackage>com.tds.contract.dto</modelPackage>

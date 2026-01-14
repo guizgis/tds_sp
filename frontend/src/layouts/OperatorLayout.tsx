@@ -43,7 +43,15 @@ const OperatorLayout: React.FC = () => {
       ]
     },
     { key: '/space', icon: <ClusterOutlined />, label: '空间管理' },
-    { key: '/contract', icon: <FileProtectOutlined />, label: '数字合约管理' },
+    { 
+      key: '/contract', 
+      icon: <FileProtectOutlined />, 
+      label: '数字合约管理',
+      children: [
+        { key: '/contract/list', label: '合约列表' },
+        { key: '/contract/templates', label: '策略模板' },
+      ]
+    },
     { key: '/settings', icon: <SettingOutlined />, label: '平台配置' },
   ];
 

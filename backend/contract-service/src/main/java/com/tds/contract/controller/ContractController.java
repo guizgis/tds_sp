@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/contract")
 public class ContractController {
 
     private final ContractService contractService;
@@ -26,16 +25,27 @@ public class ContractController {
         String issuerId = (String) request.get("issuerId");
         String issuerEntityId = (String) request.get("issuerEntityId");
         String signature = (String) request.get("signature");
+        String policySnapshot = (String) request.get("policySnapshot");
         
         // 简化时间解析，实际应使用 ISO-8601
         LocalDateTime activationTime = LocalDateTime.now();
         LocalDateTime endTime = LocalDateTime.now().plusYears(1);
 
-        String id = contractService.createContract(name, summary, activationTime, endTime, signMode, issuerId, issuerEntityId, signature);
+        String id = contractService.createContract(name, summary, activationTime, endTime, signMode, issuerId, issuerEntityId, signature, policySnapshot);
         
         Map<String, String> response = new HashMap<>();
         response.put("contractId", id);
         response.put("status", "0");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/contractRegistrate")
+    public ResponseEntity<?> fileContract(@RequestBody Map<String, Object> request) {
+        String contractId = (String) request.get("contractId");
+        boolean success = contractService.fileContract(contractId);
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("status", success ? "0" : "1");
         return ResponseEntity.ok(response);
     }
 
